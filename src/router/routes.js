@@ -24,12 +24,16 @@ const routes = [
         component: () => import('pages/PaginaRegistroJefeZona.vue')
       },
       {
-        path: '/PaginaRegistroZona', // Corregimos la ruta de zonas
+        path: '/PaginaRegistroZona',
         component: () => import('pages/PaginaRegistroZona.vue')
       },
       {
-        path: '/PaginaRegistroMiembros', // Corregimos la ruta de zonas
+        path: '/PaginaRegistroMiembros',
         component: () => import('pages/PaginaRegistroMiembros.vue')
+      },
+      {
+        path: '/PaginaRegistroVacunas',
+        component: () => import('pages/PaginaRegistroVacunas.vue')
       },
     ]
   },

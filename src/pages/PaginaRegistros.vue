@@ -14,20 +14,25 @@
           </q-input>
         </div>
       </div>
-      <q-table title="Lista de Propietarios" :rows-per-page-options="[5, 10, 15]" :rows="filteredPersonas"
-        :columns="columns" row-key="ci" flat bordered>
+      <q-table :rows="filteredPersonas" :columns="columns" row-key="id">
+        <!-- Foto del propietario -->
         <template v-slot:body-cell-foto="props">
           <q-td align="center">
-            <img :src="props.row.foto ? `/storage/${props.row.foto}` : '/images/default_image.png'"
-              alt="Foto del Propietario" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" />
+            <span v-if="props.row && props.row.foto">
+              <img :src="getStorageUrl(props.row.foto)" alt="Foto del Propietario" style="max-height: 100px;" />
+            </span>
+            <span v-else>No image available</span>
           </q-td>
         </template>
 
+        <!-- Botón de registrar mascota -->
         <template v-slot:body-cell-registro="props">
           <q-td align="center">
             <q-btn flat icon="pets" color="teal" @click="openModalMascotas(props.row)" />
           </q-td>
         </template>
+
+        <!-- Botones de editar/eliminar -->
         <template v-slot:body-cell-actions="props">
           <q-td align="center">
             <q-btn flat icon="edit" color="primary" @click="editPersona(props.row)" />
@@ -76,10 +81,8 @@
               </div>
               <!-- Campo para imagen del propietario -->
               <div class="col-xs-12 col-sm-6 col-md-4">
-                <div>
-                  <label for="foto">Subir Foto del Propietario</label>
-                  <input type="file" class="dropify" id="foto" accept="image/*;capture=camera" />
-                </div>
+                <label for="foto">Subir Foto del Propietario</label>
+                <input type="file" class="dropify" id="foto" accept="image/*;capture=camera" />
               </div>
 
               <div id="map" class="q-mt-md" style="height: 300px; width: 100%"></div>
@@ -133,9 +136,8 @@
                 <div class="col-xs-12 col-sm-6 col-md-4">
                   <q-select filled v-model="mascotaData.raza_id" use-input input-debounce="0" label="Raza"
                     :options="filteredRazas" option-value="id" option-label="nombre" clearable
-                    hint="Seleccione una Raza" lazy-rules @filter="filterRazas"
+                    hint="Seleccione una Raza" lazy-rules @filter="filterRazas" :disable="!mascotaData.especie"
                     :rules="[(val) => !!val || 'Seleccione una Raza']" />
-
                 </div>
 
                 <div class="col-xs-12 col-sm-6 col-md-4">
@@ -208,11 +210,13 @@ import Swal from 'sweetalert2';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Dropify from 'dropify';
-import { api } from "boot/axios";
+import { api, storage } from "boot/axios";
 // Importar Dropify CSS y JS
 import 'dropify/dist/css/dropify.min.css';
 import 'dropify/dist/js/dropify.min.js';
+import { useQuasar } from 'quasar'; // Importa useQuasar
 
+const $q = useQuasar();
 const mostrarBotonCancelar = ref(false);
 const personas = ref([]);
 const search = ref('');
@@ -220,14 +224,8 @@ const columns = [
   { name: 'nombres_apellidos', label: 'Nombres y Apellidos', field: 'nombres_apellidos', align: 'center' },
   { name: 'ci', label: 'CI', field: 'ci', align: 'center' },
   { name: 'telefono', label: 'Teléfono', field: 'telefono', align: 'center' },
-  { name: 'foto', label: 'Foto', field: 'foto', align: 'center' },
-  {
-    name: 'registro',
-    label: 'Registrar Mascota',
-    field: 'registro',
-    align: 'center',
-    sortable: false
-  },
+  { name: 'foto', label: 'Foto', field: 'foto', align: 'center', format: val => val || 'Sin imagen' },  // Foto por defecto si está vacía
+  { name: 'registro', label: 'Registrar Mascota', field: 'registro', align: 'center', sortable: false },
   { name: 'actions', label: 'Acciones', align: 'center' }
 ];
 
@@ -245,23 +243,39 @@ const filteredPersonas = computed(() => {
   });
 });
 
+const isLoading = ref(true);
+
 const fetchPropietarios = async () => {
   try {
     const response = await api.get('/propietarios');
-    console.log('Response data:', response.data);
-
     personas.value = response.data.map(propietario => ({
       nombres_apellidos: `${propietario.persona.nombres} ${propietario.persona.apellidos}`,
       ci: propietario.persona.ci,
       telefono: propietario.persona.telefono,
-      propietario_id: propietario.id  // Asegúrate de que propietario_id esté aquí
+      foto: propietario.foto || '',  // Asegúrate de que haya al menos un string vacío si no hay foto
+      propietario_id: propietario.id
     }));
+    isLoading.value = false;  // Indicar que la carga ha terminado
   } catch (error) {
     console.error('Error fetching propietarios:', error);
   }
 };
+const props = defineProps({
+  row: {
+    type: Object,
+    required: true
+  }
+});
 
-
+const getStorageUrl = (path) => {
+  if (!path) {
+    console.error('La propiedad foto no está definida:', path);  // Asegúrate de que el path esté definido
+    return '';
+  }
+  const url = `http://localhost:8000${path}`;
+  console.log('URL de la imagen generada:', url);  // Revisa que la URL esté bien formada
+  return url;
+};
 const personaData = ref({
   nombres: '',
   apellidos: '',
@@ -499,8 +513,10 @@ const submitFormPersona = async () => {
 
     // Capturar la imagen del propietario si se ha seleccionado
     const fotoPropietario = document.getElementById('foto').files[0];
-    if (fotoPropietario) {
-      formDataPropietario.append('foto', fotoPropietario); // Añadir la imagen al FormData del propietario
+    if (!fotoPropietario) {
+      console.error("No file selected for upload");
+    } else {
+      formDataPropietario.append('foto', fotoPropietario); // Añadir la imagen al FormData de la persona
     }
 
     // Añadir el ID de la persona al FormData del propietario
@@ -519,7 +535,13 @@ const submitFormPersona = async () => {
     openModalMascota(personaData.value.nombres, personaData.value.apellidos, propietario.id);
 
     // Mostrar mensaje de éxito
-    Swal.fire('Éxito', 'Persona y propietario registrados correctamente', 'success');
+    $q.notify({
+      type: 'positive',
+      message: 'Persona y propietario registrados correctamente',
+      position: 'top'
+    });
+    fetchPropietarios();
+
     closeModalPersona();
   } catch (error) {
     if (error.response) {
@@ -529,7 +551,11 @@ const submitFormPersona = async () => {
     } else {
       console.error('Error al configurar la solicitud:', error.message);
     }
-    Swal.fire('Error', 'Hubo un error al registrar los datos', 'error');
+    $q.notify({
+      type: 'negative',
+      message: 'Hubo un error al registrar los datos',
+      position: 'top'
+    });
   }
 };
 
@@ -550,7 +576,7 @@ const submitFormMascota = async (closeModal = true) => {
   const birthYear = currentYear - mascotaData.value.rangoEdad;
 
   // Crear la fecha de nacimiento en formato YYYY-MM-DD
-  //const fechaNacimiento = `${ birthYear }-${ now.getMonth() + 1 } -${ now.getDate() }`;
+  //const fechaNacimiento = ${ birthYear }-${ now.getMonth() + 1 } -${ now.getDate() };
   const month = String(now.getMonth() + 1).padStart(2, '0');  // Mes con dos dígitos
   const day = String(now.getDate()).padStart(2, '0');  // Día con dos dígitos
   const fechaNacimiento = `${birthYear}-${month}-${day}`;  // Genera la fecha con el formato correcto
@@ -593,7 +619,11 @@ const submitFormMascota = async (closeModal = true) => {
     });
 
     console.log("Mascota registrada con éxito:", mascotaResponse.data);
-    Swal.fire('Éxito', 'Mascota registrada correctamente', 'success');
+    $q.notify({
+      type: 'positive',
+      message: 'Mascota registrada correctamente',
+      position: 'top'
+    });
     // Limpiar los campos de Dropify después de un registro exitoso
     const fotoFrontalElement = $('#fotoFrontal').dropify();
     fotoFrontalElement.data('dropify').resetPreview();
@@ -614,7 +644,11 @@ const submitFormMascota = async (closeModal = true) => {
     } else {
       console.error("Error al configurar la solicitud:", error.message);
     }
-    Swal.fire('Error', 'Hubo un error al registrar la mascota', 'error');
+    $q.notify({
+      type: 'negative',
+      message: 'Hubo un error al registrar la mascota',
+      position: 'top'
+    });
   }
 
 };
@@ -652,23 +686,22 @@ const submitAndContinue = async () => {
 // Función para obtener razas filtradas por tipo (0 = Perro, 1 = Gato)
 const fetchRazas = async (tipo) => {
   try {
-    const response = await api.get(`/razas?tipo=${tipo}`);
+    const response = await api.get(`/razas?tipo=${tipo}`); // El tipo 0 para perros, 1 para gatos
     razas.value = response.data;
-    filteredRazas.value = razas.value; // Actualiza el array con las razas filtradas
+    filteredRazas.value = razas.value;
   } catch (error) {
     console.error("Error al cargar las razas:", error);
   }
 };
+
 const onEspecieChange = (especie) => {
   if (!especie) {
-    filteredRazas.value = [];  // Vaciar las razas si no hay especie seleccionada
+    filteredRazas.value = []; // Vaciar las razas si no hay especie seleccionada
     return;
   }
-  // Si la especie seleccionada es "Perro", el tipo es 0, si es "Gato", el tipo es 1
-  const tipo = especie === 'Perro' ? 0 : 1;
+  const tipo = especie === 'Perro' ? 0 : 1; // 0 para perros, 1 para gatos
 
-  // Llamar a la función fetchRazas con el tipo correspondiente
-  fetchRazas(tipo);
+  fetchRazas(tipo); // Llamar a la función fetchRazas con el tipo adecuado
 };
 
 
