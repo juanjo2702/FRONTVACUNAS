@@ -20,6 +20,10 @@ const routes = [
         path: '/PaginaRegistroZona', // Corregimos la ruta de zonas
         component: () => import('pages/PaginaRegistroZona.vue')
       },
+      {
+        path: '/PaginaListaMascotas', // Corregimos la ruta de zonas
+        component: () => import('pages/PaginaListaMascotas.vue')
+      },
     ]
   },
   // Siempre deja esta ruta como última para manejar errores 404

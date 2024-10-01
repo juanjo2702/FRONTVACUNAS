@@ -11,7 +11,7 @@
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="drawer-bg">
       <div class="logo-container">
-        <img src="/perros.png" alt="Logo" class="logo" />
+        <img src="src/img/perros.png" alt="Logo" class="logo" />
       </div>
       <div class="divider"></div>
 
