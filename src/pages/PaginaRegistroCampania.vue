@@ -166,6 +166,8 @@ import { ref, computed, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { api } from "boot/axios";
 import Swal from "sweetalert2";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 const $q = useQuasar();
 
@@ -505,30 +507,75 @@ const fetchZonaPorCentro = () => {
 
 
 // Enviar el formulario de asignación de zonas
-const generarBrigadas = async (zona, numBrigadas) => {
-  const zonaNombre = zona.centro.substring(0, 3).toUpperCase(); // Primeras 3 letras del centro
-  const campaniaNombre = campaniaData.value.nombre.substring(campaniaData.value.nombre.length - 4); // Últimos 4 caracteres
+const generarBrigadas = async (zonaId, numBrigadas) => {
+  const zona = zonas.value.find(z => z.id === zonaId);
+  if (!zona) {
+    console.error('Zona no encontrada');
+    return;
+  }
+
+  const zonaNombre = zona.nombre.substring(0, 3).toUpperCase(); // Primeras 3 letras del centro
+  // Dividir el nombre de la campaña por "-" y tomar las últimas 2 partes si existen
+  // Obtener el mes y el año actuales
+  const fechaActual = new Date();
+  const mesActual = String(fechaActual.getMonth() + 1).padStart(2, '0'); // Mes actual (formato MM)
+  const añoActual = fechaActual.getFullYear(); // Año actual (formato YYYY)
+  const brigadas = [];
+  console.log('Zona:', zonaNombre);
+  console.log('Mes y Año:', `${mesActual}-${añoActual}`);
 
   for (let i = 1; i <= numBrigadas; i++) {
-    const username = `BR${i}-${zonaNombre}-${campaniaNombre}`;
-    const password = `BRIGADA${i}${zona.centro.split(' ')[0].toUpperCase()}`;
-  };
-
-  try {
-    await api.post('/brigadas', {
-      usuario: {
-        nombre: username,
-        password: password,
-        rol_id: 1, // Asignar rol de brigada
-        estado: 1  // Estado activo
-      },
-      zona_id: zona.id
-    });
-  } catch (error) {
-    console.error('Error al crear brigada:', error);
+    const username = `BR${i}-${zonaNombre}-${mesActual}-${añoActual}`;
+    const password = `BRIGADA${i}${zonaNombre}`;  // Contraseña
+    console.log(`Contraseña generada: ${password}`);
+    // Guardar cada brigada
+    try {
+      const response = await api.post('/brigadas', {
+        usuario: {
+          nombre: username,
+          password: password,
+          rol_id: 1,  // Asignar el rol de brigada (puedes ajustar este rol según tu estructura)
+          estado: 1  // Estado activo
+        },
+        zona_id: zonaId  // Relacionar con la zona seleccionada
+      });
+      brigadas.push({ nombre: username, password });
+      console.log(`Brigada ${i} guardada correctamente`, response.data);
+    } catch (error) {
+      console.error(`Error al crear la brigada ${i}:`, error);
+    }
   }
-}
+  generarPDFBrigadas(zona.nombre, zona.centro, selectedJefeZona.value.nombreCompleto, brigadas);
+};
+const generarPDFBrigadas = (zona, centro, jefeZona, brigadas) => {
+  const doc = new jsPDF();
 
+  // Título del documento
+  doc.setFontSize(18);
+  doc.text("Informe de Brigadas", 14, 22);
+
+  // Detalles de la campaña y la zona
+  doc.setFontSize(12);
+  doc.text(`Zona: ${zona}`, 14, 32);
+  doc.text(`Centro: ${centro}`, 14, 40);
+  doc.text(`Jefe de Zona: ${jefeZona}`, 14, 48);
+
+  // Generar la tabla de brigadas con jsPDF-AutoTable
+  const tableData = brigadas.map((brigada, index) => [
+    index + 1,
+    brigada.nombre,
+    brigada.password,
+  ]);
+
+  doc.autoTable({
+    head: [["#", "Nombre de Brigada", "Contraseña"]],
+    body: tableData,
+    startY: 60, // Dónde empezar la tabla
+  });
+
+  // Descargar el PDF
+  doc.save(`Brigadas-${zona}.pdf`);
+};
 
 const guardarYFinalizarAsignacion = async () => {
   // Lógica para guardar en la tabla de alcances
@@ -620,7 +667,8 @@ const guardarAsignacion = async () => {
       zona_id: zonaId,  // Capturar el ID de la zona
       persona_id: persona.id
     });
-
+    fetchCampanias();
+    await generarBrigadas(zonaId, numBrigadas.value)
     $q.notify({
       color: 'green-8',
       textColor: 'white',
@@ -643,7 +691,8 @@ const guardarAsignacion = async () => {
 };
 const guardarYSiguienteAsignacion = async () => {
   try {
-    await guardarAsignacion(); // Uso de await dentro de una función async
+    await guardarAsignacion();
+    // Uso de await dentro de una función async
     resetZonasForm();
   } catch (error) {
     console.error('Error al guardar asignación', error);

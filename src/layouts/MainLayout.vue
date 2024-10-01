@@ -2,9 +2,11 @@
   <q-layout view="lHh Lpr lFf" class="bg-yellow-7">
     <q-header elevated class="header-bg text-brown">
       <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" class="text" />
-        <q-toolbar-title style="color: #E9EFEC;font-family: Arial, Helvetica, sans-serif;">
-          Animales Vacunados App
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" class="text-black" />
+
+        <q-toolbar-title
+          style="color: black; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ; font-size: 22px; text-transform: uppercase;">
+          {{ userName }}
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
@@ -14,7 +16,6 @@
         <img src="/perros.png" alt="Logo" class="logo" />
       </div>
       <div class="divider"></div>
-
       <q-list>
         <router-link to="/" exact-active-class="q-item-active-selected"
           class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
@@ -45,6 +46,22 @@
                 <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
               </svg>
               <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">JEFE DE ZONA</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaRegistroMiembros" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="40" height="40"
+                viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+              </svg>
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">MIEMBROS</span>
             </div>
           </q-item-section>
         </router-link>
@@ -101,6 +118,9 @@
           </q-item-section>
         </router-link>
       </q-list>
+      <div class="logout-container">
+        <q-btn flat dense class="logout-btn" @click="logout" icon="exit_to_app" label="Cerrar Sesión" />
+      </div>
     </q-drawer>
 
     <q-page-container class="bg-white">
@@ -115,20 +135,59 @@ import { ref } from "vue";
 export default {
   setup() {
     const leftDrawerOpen = ref(false);
+    const userName = ref(localStorage.getItem('userName') || ''); // Suponiendo que el nombre de usuario está almacenado en localStorage
 
     const toggleLeftDrawer = () => {
       leftDrawerOpen.value = !leftDrawerOpen.value;
     };
 
+    const logout = () => {
+      localStorage.removeItem('authToken'); // Elimina el token de autenticación
+      localStorage.removeItem('userName'); // Elimina el nombre de usuario
+      window.location.href = '/login';      // Redirige a la página de login
+    };
+
     return {
       leftDrawerOpen,
+      userName,
       toggleLeftDrawer,
+      logout,
     };
   },
 };
 </script>
 
 <style>
+.header-bg {
+  background-color: #205b53;
+  /* Fondo más oscuro */
+  color: rgb(6, 104, 55);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Sombra para separar la barra */
+}
+
+.text-white {
+  color: rgb(255, 255, 255);
+}
+
+.bg-yellow-7 {
+  background-color: #6A9C89;
+  /* Color de fondo */
+}
+
+.drawer-bg {
+  background-color: #205b53;
+  /* Color del drawer */
+}
+
+.bg-white {
+  background-color: #E9EFEC;
+}
+
+.q-toolbar-title {
+  font-weight: bold;
+}
+
 .logo-container {
   display: flex;
   justify-content: center;
@@ -138,6 +197,13 @@ export default {
 .logo {
   width: 220px;
   height: auto;
+}
+
+.user-info {
+  margin-top: 10px;
+  text-align: center;
+  color: #E9EFEC;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .header-bg {
@@ -169,5 +235,18 @@ export default {
 .q-item-active-selected {
   background-color: #6A9C89;
   color: #ffffff;
+}
+
+.logout-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.logout-btn {
+  font-weight: bold;
+  color: #E9EFEC;
+  background-color: #6A9C89;
+  font-family: Arial, Helvetica, sans-serif;
 }
 </style>

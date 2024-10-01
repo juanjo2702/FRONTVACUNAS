@@ -1,5 +1,12 @@
 const routes = [
   {
+    path: '/login',
+    component: () => import('layouts/LoginLayout.vue'),
+    children: [
+      { path: '', component: () => import('pages/LoginPage.vue') }
+    ]
+  },
+  {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
@@ -19,6 +26,10 @@ const routes = [
       {
         path: '/PaginaRegistroZona', // Corregimos la ruta de zonas
         component: () => import('pages/PaginaRegistroZona.vue')
+      },
+      {
+        path: '/PaginaRegistroMiembros', // Corregimos la ruta de zonas
+        component: () => import('pages/PaginaRegistroMiembros.vue')
       },
     ]
   },

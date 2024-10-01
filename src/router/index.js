@@ -1,30 +1,42 @@
-import { route } from 'quasar/wrappers'
-import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
-import routes from './routes'
-
-/*
- * If not building with SSR mode, you can
- * directly export the Router instantiation;
- *
- * The function below can be async too; either use
- * async/await or return a Promise which resolves
- * with the Router instance.
- */
+import { route } from 'quasar/wrappers';
+import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router';
+import routes from './routes';
 
 export default route(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory)
+    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory);
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
 
-    // Leave this as is and make changes in quasar.conf.js instead!
-    // quasar.conf.js -> build -> vueRouterMode
-    // quasar.conf.js -> build -> publicPath
+    // Usa la configuración de quasar.conf.js para el modo de historial
     history: createHistory(process.env.VUE_ROUTER_BASE)
-  })
+  });
 
-  return Router
-})
+  // Función de autenticación para verificar si hay un token
+  function isAuthenticated() {
+    return !!localStorage.getItem('authToken'); // Verifica el token de autenticación
+  }
+
+  // Función para verificar permisos (si tienes lógica de permisos)
+  function hasPermission(requiredPermission) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    return user && user.permissions && user.permissions.includes(requiredPermission);
+  }
+
+  // Guard global para manejar la autenticación y permisos
+  Router.beforeEach((to, from, next) => {
+    // Redirigir al login si no está autenticado y no va a la página de login
+    if (!isAuthenticated() && to.path !== '/login') {
+      next('/login');
+    } else if (to.meta.permiso && !hasPermission(to.meta.permiso)) {
+      next('/PaginaNoAcceso');
+    } else {
+      next(); // Permitir la navegación
+    }
+  });
+
+  return Router;
+});
