@@ -1,11 +1,10 @@
 <template>
   <q-layout view="lHh Lpr lFf" class="bg-yellow-7">
-    <q-header elevated class="header-bg text-brown">
+    <q-header elevated style="background-color: #1e534c;" class="text-brown">
       <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" class="text-black" />
-
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" class="text-white" />
         <q-toolbar-title
-          style="color: black; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ; font-size: 22px; text-transform: uppercase;">
+          style="color: white; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ; font-size: 22px; text-transform: uppercase;">
           {{ userName }}
         </q-toolbar-title>
       </q-toolbar>
@@ -133,6 +132,25 @@
                 <path d="M12.5 3a16.983 16.983 0 0 1 2.556 8.136" />
               </svg>
               <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">VACUNAS</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaConsultaVacunas" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-world-heart" width="40"
+                height="40" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M21 12a9 9 0 1 0 -9.679 8.974" />
+                <path d="M3.6 9h16.8" />
+                <path d="M3.6 15h6.9" />
+                <path d="M11.5 3a17 17 0 0 0 0 18" />
+                <path d="M12.5 3a16.983 16.983 0 0 1 2.556 8.136" />
+              </svg>
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">CONSULTA VACUNAS</span>
             </div>
           </q-item-section>
         </router-link>

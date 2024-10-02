@@ -1,10 +1,14 @@
 <template>
   <q-page class="q-pa-md">
-    <!-- Buscador de Propietario -->
-    <div class="q-gutter-md q-col-gutter-md q-mt-md buscador">
-      <q-input filled v-model="search" label="Buscar propietario" />
-      <q-btn icon="search" color="primary" @click="buscarPropietarios" flat round />
-    </div>
+
+    <q-row justify="center" class="q-mb-md">
+      <q-col cols="8" sm="4"> <!-- Espacio centrado para el input -->
+        <q-input filled v-model="search" label="Buscar propietario" class="search-input" />
+      </q-col>
+      <q-col cols="2" sm="1">
+        <q-btn icon="search" color="primary" @click="buscarPropietarios" flat round class="search-btn" />
+      </q-col>
+    </q-row>
 
     <!-- Lista de Resultados de Búsqueda -->
     <div v-if="propietarios.length > 0" class="q-mt-md">
@@ -13,8 +17,7 @@
           @click="seleccionarPropietario(propietario)">
           <q-item-section>
             <q-item-label>{{ propietario.nombres }} {{ propietario.apellidos }}</q-item-label>
-            <q-item-label caption>CI: {{ propietario.ci }} - Teléfono: {{ propietario.telefono
-              }}</q-item-label>
+            <q-item-label caption>CI: {{ propietario.ci }} - Teléfono: {{ propietario.telefono }}</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
@@ -49,6 +52,12 @@
                 <div class="q-mb-md">
                   <q-input filled v-model="mascota.nombre" label="Nombre del Perro" disable />
                 </div>
+
+                <!-- Select para Miembro de la Brigada -->
+                <q-select v-model="mascota.miembroSeleccionado" label="Miembro de la Brigada"
+                  :options="miembrosBrigada.map(miembro => ({ label: `${miembro.persona.nombres} ${miembro.persona.apellidos}`, value: miembro.id }))"
+                  filled />
+
                 <!-- Botones de estado de vacunación -->
                 <div class="q-mb-md vacunacion-container">
                   <q-btn block unelevated :color="mascota.vacunado === 1 ? 'green' : 'grey'"
@@ -60,18 +69,19 @@
                     <q-icon name="close" /> No Vacunado
                   </q-btn>
                 </div>
+
                 <!-- Motivo si no vacunado -->
-                <div v-if="mascota.vacunado === 0">
-                  <q-select v-model="mascota.motivo" label="Motivo de no vacunación" :options="[
+                <q-select v-if="mascota.vacunado === 0" v-model="mascota.motivo" label="Motivo de no vacunación"
+                  :options="[
                     { label: 'Menor a 3 meses', value: 1 },
-                    { label: 'Preñada', value: 2 },
-                    { label: 'Enfermedad grave', value: 3 }
+                    { label: 'Gestacion', value: 2 },
+                    { label: 'Enfermedad grave', value: 3 },
+                    { label: 'Ausente', value: 4 }
                   ]" />
-                </div>
 
                 <!-- Botón para guardar cambios -->
                 <div class="q-mt-md">
-                  <q-btn color="primary" label="Guardar Cambios" @click="guardarHistorial(mascota)" />
+                  <q-btn color="primary" label="Guardar" @click="guardarHistorial(mascota)" />
                 </div>
               </div>
             </div>
@@ -84,22 +94,21 @@
 
 <script>
 import { ref } from 'vue';
-import { QPage, QInput, QBtn, QCard, QCardSection, QList, QItem, QItemSection, QItemLabel, QImg, QBtnToggle, QSelect } from 'quasar';
-import axios from 'axios';
-
+import { api } from 'boot/axios';
+import { useQuasar } from 'quasar'; // Importa useQuasar
 export default {
-  components: {
-    QPage, QInput, QBtn, QCard, QCardSection, QList, QItem, QItemSection, QItemLabel, QImg, QSelect
-  },
+
   setup() {
+    const $q = useQuasar();
     const search = ref("");
     const propietarios = ref([]);
     const propietarioSeleccionado = ref(null);
     const mascotas = ref([]);
+    const miembrosBrigada = ref([]);
 
     const buscarPropietarios = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/buscar-personas', { params: { q: search.value } });
+        const response = await api.get('/buscar-personas', { params: { q: search.value } });
         propietarios.value = response.data;
         propietarioSeleccionado.value = null;
         mascotas.value = [];
@@ -117,37 +126,60 @@ export default {
     const mostrarMascotas = async () => {
       if (propietarioSeleccionado.value) {
         try {
-          const response = await axios.get(`http://localhost:8000/api/propietario/${propietarioSeleccionado.value.id}/mascotas`);
-          mascotas.value = response.data;
+          const response = await api.get(`/propietario/${propietarioSeleccionado.value.id}/mascotas`);
+          // Inicializamos miembroSeleccionado dentro de cada mascota
+          mascotas.value = response.data.map(mascota => ({
+            ...mascota,
+            miembroSeleccionado: null, // Inicializamos el miembro seleccionado como null
+          }));
+          obtenerMiembrosBrigada();
         } catch (error) {
           console.error("Error obteniendo mascotas:", error);
         }
       }
     };
 
-    const guardarHistorial = async (mascota) => {
-      console.log({
-        mascota_id: mascota.id,
-        estado: mascota.vacunado,
-        motivo: mascota.vacunado === 0 ? mascota.motivo : null,
-        alcance_id: mascota.alcance_id, // Asegúrate de tener estos valores
-        participacion_id: mascota.participacion_id // Asegúrate de tener estos valores
-      });
+    // Obtener miembros de la brigada
+    const obtenerMiembrosBrigada = async () => {
       try {
-        await axios.post('http://localhost:8000/api/historiavacunas', {
-          mascota_id: mascota.id,
-          estado: mascota.vacunado, // 1 para vacunado, 0 para no vacunado
-          motivo: mascota.vacunado === 0 ? mascota.motivo : null,
-          alcance_id: mascota.alcance_id,
-          participacion_id: mascota.participacion_id
-        });
-        alert("Historial de vacunación guardado correctamente.");
+        const brigadaId = localStorage.getItem('brigadaUserId');
+        const response = await api.get(`/brigadas/${brigadaId}/miembros`);
+        miembrosBrigada.value = response.data;
       } catch (error) {
-        console.error("Error guardando historial de vacunación:", error);
+        console.error("Error al obtener miembros de la brigada:", error);
       }
     };
 
+    const guardarHistorial = async (mascota) => {
+      try {
+        // Aquí obtenemos solo el valor del miembro_id
+        const data = {
+          estado: mascota.vacunado, // 1 para vacunado, 0 para no vacunado
+          motivo: mascota.vacunado === 0 ? mascota.motivo.value : null, // Obtener solo el valor del motivo
+          mascota_id: mascota.id,
+          miembro_id: mascota.miembroSeleccionado.value || mascota.miembroSeleccionado, // Asegúrate de obtener solo el valor del ID
+          brigada_id: localStorage.getItem('brigadaUserId') // Enviar la brigada_id desde el localStorage
+        };
 
+        console.log("Datos enviados al backend:", data);
+
+        // Enviar los datos al backend
+        const response = await api.post('/historiavacunas', data);
+
+        if (response.status === 200) {
+          $q.notify({
+            type: 'positive',
+            message: 'Historial de vacunación guardado correctamente.'
+          });
+        }
+      } catch (error) {
+        $q.notify({
+          type: 'negative',
+          message: 'Error al guardar el historial de vacunación.'
+        });
+        console.error("Error:", error);
+      }
+    };
 
 
     return {
@@ -155,14 +187,16 @@ export default {
       propietarios,
       propietarioSeleccionado,
       mascotas,
+      miembrosBrigada,
       buscarPropietarios,
       seleccionarPropietario,
       mostrarMascotas,
-      guardarHistorial
+      guardarHistorial,
     };
   }
 };
 </script>
+
 <style scoped>
 .q-page {
   background-color: #f0f0f0;
@@ -172,25 +206,8 @@ export default {
   border-radius: 8px;
 }
 
-.vacunado-card {
-  background-color: #e0f8e0;
-  border-left: 5px solid green;
-}
-
-.no-vacunado-card {
-  background-color: #fde5e5;
-  border-left: 5px solid red;
-}
-
-.q-btn {
-  width: 130px;
-  margin-right: 8px;
-  font-size: 14px;
-}
-
-.vacunacion-container {
-  display: flex;
-  justify-content: flex-start;
+.search-input {
+  width: 100%;
 }
 
 .vacunacion-container {

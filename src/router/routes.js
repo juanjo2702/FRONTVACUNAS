@@ -35,6 +35,10 @@ const routes = [
         path: '/PaginaRegistroVacunas',
         component: () => import('pages/PaginaRegistroVacunas.vue')
       },
+      {
+        path: '/PaginaConsultaVacunas',
+        component: () => import('src/pages/PaginaConsultaVacunas.vue')
+      },
     ]
   },
   // Siempre deja esta ruta como última para manejar errores 404

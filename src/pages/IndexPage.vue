@@ -50,61 +50,80 @@
 
     <!-- Fila de gráficos principales (Primera fila de gráficos) -->
     <div class="row justify-center q-col-gutter-md q-mb-md q-mt-md">
-      <!-- Gráfico 1: Distribución de Vacunación por Zona (tipo donut) -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
-        <q-card-section>
-          <q-icon name="place" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Distribución de Vacunación por Zona</div>
-          <apexchart type="donut" :options="vacunasPorZonaChartOptions" :series="vacunasPorZonaChartSeries" />
-        </q-card-section>
-      </q-card>
-
-      <!-- Gráfico 2: Progreso de Vacunación -->
+      <!-- Gráfico 1: Distribución de Mascotas por Especie -->
       <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Progreso de Vacunación</div>
-          <apexchart type="donut" :options="vacunasProgresoChartOptions" :series="vacunasProgresoChartSeries" />
+          <div class="text-h6 text-white q-mb-md">Distribución de Mascotas por Especie</div>
+          <ApexChartComponent type="donut" :options="mascotasPorEspecieChartOptions"
+            :series="mascotasPorEspecieChartSeries" />
         </q-card-section>
       </q-card>
 
-      <!-- Gráfico 3: Vacunación por Mes -->
+      <!-- Gráfico 2: Perros por Raza -->
+      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+        <q-card-section>
+          <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
+          <div class="text-h6 text-white q-mb-md">Perros Registrados por Raza</div>
+          <ApexChartComponent type="bar" :options="perrosPorRazaChartOptions" :series="perrosPorRazaChartSeries" />
+        </q-card-section>
+      </q-card>
+
+      <!-- Gráfico 3: Gatos por Raza (Rosquilla) -->
       <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="bar_chart" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Vacunación por Mes</div>
-          <apexchart type="bar" :options="vacunasMesChartOptions" :series="vacunasMesChartSeries" />
+          <div class="text-h6 text-white q-mb-md">Gatos Registrados por Raza</div>
+          <ApexChartComponent type="donut" :options="gatosPorRazaChartOptions" :series="gatosPorRazaChartSeries" />
+        </q-card-section>
+      </q-card>
+      <!-- Gráfico 6: Control de Mascotas Vacunadas y No Vacunadas -->
+      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+        <q-card-section>
+          <q-icon name="vaccines" size="30px" class="q-mb-md" style="color: white;" />
+          <div class="text-h6 text-white q-mb-md">Control de Mascotas Vacunadas y No Vacunadas</div>
+          <ApexChartComponent type="pie" :options="mascotasVacunadasChartOptions"
+            :series="mascotasVacunadasChartSeries" />
+        </q-card-section>
+      </q-card>
+
+      <!-- Gráfico 7: Perros Vacunados y No Vacunados -->
+      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+        <q-card-section>
+          <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
+          <div class="text-h6 text-white q-mb-md">Perros Vacunados y No Vacunados</div>
+          <ApexChartComponent type="pie" :options="perrosVacunadosChartOptions" :series="perrosVacunadosChartSeries" />
+        </q-card-section>
+      </q-card>
+
+      <!-- Gráfico 8: Gatos Vacunados y No Vacunados -->
+      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+        <q-card-section>
+          <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
+          <div class="text-h6 text-white q-mb-md">Gatos Vacunados y No Vacunados</div>
+          <ApexChartComponent type="pie" :options="gatosVacunadosChartOptions" :series="gatosVacunadosChartSeries" />
         </q-card-section>
       </q-card>
     </div>
 
     <!-- Segunda fila de gráficos -->
     <div class="row justify-center q-col-gutter-md q-mb-md q-mt-md">
-      <!-- Gráfico 4: Evolución de la Vacunación -->
+      <!-- Gráfico 4: Brigadas Asignadas por Zona -->
       <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="trending_up" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Evolución de la Vacunación</div>
-          <apexchart type="line" :options="vacunasEvolucionChartOptions" :series="vacunasEvolucionChartSeries" />
+          <div class="text-h6 text-white q-mb-md">Brigadas Asignadas por Zona</div>
+          <ApexChartComponent type="bar" :options="brigadasPorZonaChartOptions" :series="brigadasPorZonaChartSeries" />
         </q-card-section>
       </q-card>
 
-      <!-- Gráfico 5: Participación en Campañas -->
+      <!-- Gráfico 5: Relación entre Mascotas y Propietarios -->
       <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="group" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Participación en Campañas</div>
-          <apexchart type="bar" :options="participacionCampanasChartOptions"
-            :series="participacionCampanasChartSeries" />
-        </q-card-section>
-      </q-card>
-
-      <!-- Gráfico 6: Efectividad de las Vacunas -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
-        <q-card-section>
-          <q-icon name="favorite" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Efectividad de las Vacunas</div>
-          <apexchart type="line" :options="efectividadVacunasChartOptions" :series="efectividadVacunasChartSeries" />
+          <div class="text-h6 text-white q-mb-md">Relación Mascotas y Propietarios</div>
+          <ApexChartComponent type="bar" :options="mascotasPropietariosChartOptions"
+            :series="mascotasPropietariosChartSeries" />
         </q-card-section>
       </q-card>
     </div>
@@ -113,12 +132,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import VueApexCharts from 'vue3-apexcharts';
-import { api } from "boot/axios";
+import { api } from 'boot/axios';
 
-// Registrar ApexCharts como componente
-const ApexCharts = VueApexCharts;
 
 // Variables para almacenar los datos de las tarjetas
 const totalMascotas = ref(0);
@@ -128,80 +143,112 @@ const totalCampanas = ref(0);
 const totalPropietarios = ref(0);
 
 // Variables para las series de datos de los gráficos
-const vacunasPorZonaChartSeries = ref([]);
-const vacunasProgresoChartSeries = ref([]);
-const vacunasMesChartSeries = ref([]);
-const vacunasEvolucionChartSeries = ref([]);
-const participacionCampanasChartSeries = ref([]);
-const efectividadVacunasChartSeries = ref([]);
+const mascotasPorEspecieChartSeries = ref([]);
+const perrosPorRazaChartSeries = ref([]);
+const gatosPorRazaChartSeries = ref([]);
+const brigadasPorZonaChartSeries = ref([]);
+const mascotasPropietariosChartSeries = ref([]);
 
-// Opciones iniciales de ApexCharts para cada gráfico
-const vacunasPorZonaChartOptions = ref({
+// Opciones de los gráficos
+const mascotasPorEspecieChartOptions = ref({
   chart: { type: 'donut', foreColor: '#fff' },
-  labels: ['Zona Norte', 'Zona Sur', 'Zona Este', 'Zona Oeste'],
+  labels: [],
   colors: ['#FF4560', '#00E396', '#008FFB', '#FEB019'],
   legend: { position: 'bottom', labels: { colors: ['#fff'] } }
 });
 
-const vacunasProgresoChartOptions = ref({
+const perrosPorRazaChartOptions = ref({
+  chart: { type: 'bar', foreColor: '#fff' },
+  xaxis: { categories: [], labels: { style: { colors: ['#fff'] } } },
+  yaxis: { labels: { style: { colors: ['#fff'] } } }
+});
+
+const gatosPorRazaChartOptions = ref({
   chart: { type: 'donut', foreColor: '#fff' },
-  labels: ['Completado', 'Pendiente'],
-  colors: ['#00E396', '#FF4560'],
+  labels: [],
   legend: { position: 'bottom', labels: { colors: ['#fff'] } }
 });
 
-const vacunasMesChartOptions = ref({
+const mascotasPropietariosChartOptions = ref({
   chart: { type: 'bar', foreColor: '#fff' },
-  xaxis: { categories: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'], labels: { style: { colors: ['#fff'] } } },
-  yaxis: { labels: { style: { colors: ['#fff'] } } },
-  colors: ['#008FFB'],
-  legend: { labels: { colors: ['#fff'] } }
+  xaxis: { categories: ['Mascotas Registradas', 'Propietarios Registrados'], labels: { style: { colors: ['#fff'] } } },
+  yaxis: { labels: { style: { colors: ['#fff'] } } }
+});
+const mascotasVacunadasChartSeries = ref([]);
+const mascotasVacunadasChartOptions = ref({
+  chart: { type: 'pie', foreColor: '#fff' },
+  labels: ['Vacunadas', 'No Vacunadas'],
+  legend: { position: 'bottom', labels: { colors: ['#fff'] } }
 });
 
-const vacunasEvolucionChartOptions = ref({
-  chart: { type: 'line', foreColor: '#fff' },
-  xaxis: { categories: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'], labels: { style: { colors: ['#fff'] } } },
-  yaxis: { labels: { style: { colors: ['#fff'] } } },
-  colors: ['#00E396'],
-  legend: { labels: { colors: ['#fff'] } }
+const perrosVacunadosChartSeries = ref([]);
+const perrosVacunadosChartOptions = ref({
+  chart: { type: 'pie', foreColor: '#fff' },
+  labels: ['Vacunados', 'No Vacunados'],
+  legend: { position: 'bottom', labels: { colors: ['#fff'] } }
 });
-
-const participacionCampanasChartOptions = ref({
-  chart: { type: 'bar', foreColor: '#fff' },
-  xaxis: { categories: ['Campaña 1', 'Campaña 2', 'Campaña 3'], labels: { style: { colors: ['#fff'] } } },
-  yaxis: { labels: { style: { colors: ['#fff'] } } },
-  colors: ['#FEB019'],
-  legend: { labels: { colors: ['#fff'] } }
+const brigadasPorZonaChartOptions = ref({
+  chart: {
+    type: 'bar',
+    foreColor: '#fff'
+  },
+  plotOptions: {
+    bar: {
+      horizontal: true // Cambiar el gráfico a orientación horizontal
+    }
+  },
+  xaxis: {
+    categories: [],  // Las categorías (zonas) se agregarán aquí
+    labels: { style: { colors: ['#fff'] } }
+  },
+  yaxis: {
+    labels: { style: { colors: ['#fff'] } }
+  }
 });
-
-const efectividadVacunasChartOptions = ref({
-  chart: { type: 'line', foreColor: '#fff' },
-  xaxis: { categories: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'], labels: { style: { colors: ['#fff'] } } },
-  yaxis: { labels: { style: { colors: ['#fff'] } } },
-  colors: ['#FF4560'],
-  legend: { labels: { colors: ['#fff'] } }
+const gatosVacunadosChartSeries = ref([]);
+const gatosVacunadosChartOptions = ref({
+  chart: { type: 'pie', foreColor: '#fff' },
+  labels: ['Vacunados', 'No Vacunados'],
+  legend: { position: 'bottom', labels: { colors: ['#fff'] } }
 });
-
 // Función para obtener los datos del backend
 const fetchDashboardData = async () => {
   try {
-    const response = await api.get('/dashboard-data');  // Cambia la URL si es necesario
+    const response = await api.get('/dashboard-data');
     const data = response.data;
-    /* const participacionResponse = await api.post('/participacions', participacionData); */
+
     // Actualizar datos de las tarjetas
     totalMascotas.value = data.totalMascotas;
     totalVacunadas.value = data.totalVacunadas;
     totalNoVacunadas.value = data.totalNoVacunadas;
     totalCampanas.value = data.totalCampanas;
     totalPropietarios.value = data.totalPropietarios;
+    totalMascotas.value = data.mascotasRegistradas;
+    totalVacunadas.value = data.mascotasVacunadasYNo.vacunadas;
+    totalNoVacunadas.value = data.mascotasVacunadasYNo.no_vacunadas;
+    // Actualizar gráficos
+    mascotasPorEspecieChartSeries.value = Object.values(data.mascotasPorEspecie);
+    mascotasPorEspecieChartOptions.value.labels = Object.keys(data.mascotasPorEspecie);
+    mascotasPorEspecieChartSeries.value = Object.values(data.mascotasPorEspecie);
+    mascotasPorEspecieChartOptions.value.labels = Object.keys(data.mascotasPorEspecie);
+    perrosPorRazaChartSeries.value = [
+      {
+        name: 'Perros',
+        data: Object.values(data.perrosPorRaza)
+      }
+    ];
+    perrosPorRazaChartOptions.value.xaxis.categories = Object.keys(data.perrosPorRaza);
 
-    // Actualizar datos de los gráficos
-    vacunasPorZonaChartSeries.value = data.vacunasPorZona;
-    vacunasProgresoChartSeries.value = data.vacunasProgreso;
-    vacunasMesChartSeries.value = [{ name: 'Vacunaciones', data: data.vacunacionesPorMes }];
-    vacunasEvolucionChartSeries.value = [{ name: 'Vacunaciones Totales', data: data.evolucionVacunacion }];
-    participacionCampanasChartSeries.value = [{ name: 'Participación', data: data.participacionCampanas }];
-    efectividadVacunasChartSeries.value = [{ name: 'Efectividad', data: data.efectividadVacunas }];
+    gatosPorRazaChartSeries.value = Object.values(data.gatosPorRaza);
+    gatosPorRazaChartOptions.value.labels = Object.keys(data.gatosPorRaza);
+
+    brigadasPorZonaChartSeries.value = [{ name: 'Brigadas', data: Object.values(data.brigadasPorZona) }];
+    brigadasPorZonaChartOptions.value.xaxis.categories = Object.keys(data.brigadasPorZona);
+    mascotasVacunadasChartSeries.value = [data.mascotasVacunadasYNo.vacunadas, data.mascotasVacunadasYNo.no_vacunadas];
+    perrosVacunadosChartSeries.value = [data.perrosVacunadosYNo.vacunados, data.perrosVacunadosYNo.no_vacunados];
+    gatosVacunadosChartSeries.value = [data.gatosVacunadosYNo.vacunados, data.gatosVacunadosYNo.no_vacunados];
+    mascotasPropietariosChartSeries.value = [{ name: 'Relación', data: [data.mascotasRegistradas, data.propietariosRegistrados] }];
+
   } catch (error) {
     console.error('Error obteniendo los datos del dashboard:', error);
   }
@@ -210,7 +257,6 @@ const fetchDashboardData = async () => {
 // Ejecutar la función cuando el componente se monte
 onMounted(fetchDashboardData);
 </script>
-
 <style scoped>
 .q-card {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
