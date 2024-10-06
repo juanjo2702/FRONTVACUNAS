@@ -214,8 +214,15 @@ import { api, storage } from "boot/axios";
 // Importar Dropify CSS y JS
 import 'dropify/dist/css/dropify.min.css';
 import 'dropify/dist/js/dropify.min.js';
-import { useQuasar } from 'quasar'; // Importa useQuasar
+import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';  // Importa useQuasar
+const router = useRouter();  // Crea una instancia del router
 
+// Función para registrar la mascota y cerrar el modal
+const submitAndClose = async () => {
+  await submitFormMascota(true);
+  router.push('/PaginaConsultaVacunas');
+};
 const $q = useQuasar();
 const mostrarBotonCancelar = ref(false);
 const personas = ref([]);
@@ -651,11 +658,6 @@ const submitFormMascota = async (closeModal = true) => {
     });
   }
 
-};
-
-const submitAndClose = async () => {
-  // Registrar la mascota actual y cerrar el modal
-  await submitFormMascota(true);  // Pasamos un argumento para que cierre el modal
 };
 
 // Función para registrar y cerrar el modal

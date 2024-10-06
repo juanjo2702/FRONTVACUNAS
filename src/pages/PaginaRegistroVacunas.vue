@@ -95,7 +95,8 @@
 <script>
 import { ref } from 'vue';
 import { api } from 'boot/axios';
-import { useQuasar } from 'quasar'; // Importa useQuasar
+import { useQuasar } from 'quasar';
+import axios from 'axios'; // Importa useQuasar
 export default {
 
   setup() {
@@ -126,16 +127,12 @@ export default {
     const mostrarMascotas = async () => {
       if (propietarioSeleccionado.value) {
         try {
-          const response = await api.get(`/propietario/${propietarioSeleccionado.value.id}/mascotas`);
-          // Inicializamos miembroSeleccionado dentro de cada mascota
-          mascotas.value = response.data.map(mascota => ({
-            ...mascota,
-            miembroSeleccionado: null, // Inicializamos el miembro seleccionado como null
-          }));
-          obtenerMiembrosBrigada();
+          const response = await axios.get(`http://localhost:8000/api/propietario/${propietarioSeleccionado.value.id}/mascotas`);
+          mascotas.value = response.data;
         } catch (error) {
           console.error("Error obteniendo mascotas:", error);
         }
+        obtenerMiembrosBrigada();
       }
     };
 
