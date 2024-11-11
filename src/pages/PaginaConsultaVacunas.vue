@@ -6,7 +6,6 @@
       <q-btn icon="search" color="primary" @click="buscarPropietarios" flat round />
     </div>
 
-    <!-- Lista de Resultados de Búsqueda -->
     <div v-if="propietarios.length > 0" class="q-mt-md">
       <q-list bordered padding>
         <q-item v-for="propietario in propietarios" :key="propietario.id" clickable
@@ -42,10 +41,9 @@
         <q-card>
           <q-card-section class="row q-col-gutter-md">
             <div class="foto-mascota col-4">
-              <q-img :src="`http://localhost:8000/storage/${mascota.fotoFrontal}` || 'https://via.placeholder.com/150'"
+              <q-img :src="`${$storage.defaults.baseURL}/${mascota.fotoFrontal}` || 'https://via.placeholder.com/150'"
                 alt="Foto del perro" class="mascota-imagen"
                 style="max-width: 100px; max-height: 100px; margin: 0 auto;" />
-
             </div>
 
             <div class="col-8">
@@ -79,6 +77,7 @@ import { QPage, QInput, QBtn, QCard, QCardSection, QList, QItem, QItemSection, Q
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { api } from 'src/boot/axios'; // Ruta al archivo axios.js
 
 export default {
   components: {
@@ -92,7 +91,9 @@ export default {
 
     const buscarPropietarios = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/buscar-personas', { params: { q: search.value } });
+        const response = await api.get('/buscar-personas', {
+          params: { q: search.value }
+        });
         propietarios.value = response.data;
         propietarioSeleccionado.value = null;
         mascotas.value = [];
@@ -110,21 +111,21 @@ export default {
     const mostrarMascotas = async () => {
       if (propietarioSeleccionado.value) {
         try {
-          const response = await axios.get(`http://localhost:8000/api/propietario/${propietarioSeleccionado.value.id}/mascotas`);
+          // Usar la instancia `api` para obtener las mascotas
+          const response = await api.get(`/propietario/${propietarioSeleccionado.value.id}/mascotas`);
           mascotas.value = response.data;
 
           // Recorremos cada mascota para obtener su raza
           for (let mascota of mascotas.value) {
-            const razaResponse = await axios.get(`http://localhost:8000/api/mascota/${mascota.id}/raza`);
+            const razaResponse = await api.get(`/mascota/${mascota.id}/raza`);
             mascota.raza = razaResponse.data.raza; // Asignamos la raza a cada mascota
           }
-          console.log(mascotas.value); // Verifica que "raza" y "tamano" estén presentes
+          console.log(mascotas.value); // Verifica que "raza" y "tamaño" estén presentes
         } catch (error) {
           console.error("Error obteniendo mascotas:", error);
         }
       }
     };
-
 
     const descargarPDF = async (mascota) => {
       const doc = new jsPDF({
@@ -134,8 +135,8 @@ export default {
       });
 
       // Fondo del carnet (anverso)
-      doc.setFillColor(242, 242, 242); // Color gris claro
-      doc.rect(0, 0, 110, 85, 'F'); // Rellenar todo el fondo del carnet
+      doc.setFillColor(242, 242, 242); // Color
+      doc.rect(0, 0, 110, 85, 'F'); // Relleno del
 
       // Encabezado del carnet (anverso)
       doc.setFillColor(0, 102, 204); // Azul elegante
@@ -196,7 +197,7 @@ export default {
         let historial = [];
         if (mascota && mascota.id) {
           try {
-            const response = await axios.get(`http://localhost:8000/api/mascota/${mascota.id}/historial-vacunas`);
+            const response = await api.get(`/mascota/${mascota.id}/historial-vacunas`);
             historial = response.data;
 
             // Conversión de motivo
@@ -241,7 +242,7 @@ export default {
 
       img.onerror = () => {
         const placeholder = new Image();
-        placeholder.src = 'http://localhost:8000/images/placeholder.png';
+        placeholder.src = `${$storage.defaults.baseURL}/placeholder.png`; // Usa la URL base de storage
         placeholder.onload = () => {
           doc.addImage(placeholder, 'JPEG', 8, 20, 35, 35); // Imagen de reemplazo
           doc.setDrawColor(0, 102, 204);
@@ -253,10 +254,10 @@ export default {
 
     const obtenerRazaPorMascota = async (mascotaId) => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/mascota/${mascotaId}/raza`);
+        // Usa la instancia `api` para obtener la raza de la mascota
+        const response = await api.get(`/mascota/${mascotaId}/raza`);
         const raza = response.data.raza;
         console.log(`La raza de la mascota es: ${raza}`);
-        // Puedes asignar el valor a un estado para mostrarlo en la interfaz si es necesario
       } catch (error) {
         console.error("Error obteniendo la raza de la mascota:", error);
       }

@@ -42,9 +42,9 @@
             <div class="mascota-info">
               <!-- Foto del perro -->
               <div class="foto-mascota">
-                <q-img
-                  :src="`http://localhost:8000/storage/${mascota.fotoFrontal}` || 'https://via.placeholder.com/150'"
+                <q-img :src="`${$storage.defaults.baseURL}/${mascota.fotoFrontal}` || 'https://via.placeholder.com/150'"
                   alt="Foto del perro" class="mascota-imagen" />
+
               </div>
 
               <!-- Información del perro -->
@@ -127,7 +127,7 @@ export default {
     const mostrarMascotas = async () => {
       if (propietarioSeleccionado.value) {
         try {
-          const response = await axios.get(`http://localhost:8000/api/propietario/${propietarioSeleccionado.value.id}/mascotas`);
+          const response = await api.get(`/propietario/${propietarioSeleccionado.value.id}/mascotas`);
           mascotas.value = response.data;
         } catch (error) {
           console.error("Error obteniendo mascotas:", error);

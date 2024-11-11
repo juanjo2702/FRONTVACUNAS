@@ -15,7 +15,6 @@
         </div>
       </div>
       <q-table :rows="filteredPersonas" :columns="columns" row-key="id">
-        <!-- Foto del propietario -->
         <template v-slot:body-cell-foto="props">
           <q-td align="center">
             <span v-if="props.row && props.row.foto">
@@ -25,12 +24,21 @@
           </q-td>
         </template>
 
+
         <!-- Botón de registrar mascota -->
         <template v-slot:body-cell-registro="props">
           <q-td align="center">
             <q-btn flat icon="pets" color="teal" @click="openModalMascotas(props.row)" />
           </q-td>
         </template>
+
+        <!-- Botón de registrar vacuna -->
+        <template v-slot:body-cell-vacuna="props">
+          <q-td align="center">
+            <q-btn flat icon="vaccines" color="blue" @click="openModalVacunaDirectamente(props.row)" />
+          </q-td>
+        </template>
+
 
         <!-- Botones de editar/eliminar -->
         <template v-slot:body-cell-actions="props">
@@ -89,10 +97,10 @@
 
               <div class="q-pa-md row justify-evenly">
                 <q-btn label="Registrar" type="submit" color="primary" />
-                <q-btn label="Resetear" type="reset" color="negative" />
+                <q-btn label="Resetear" type="reset" color="green" />
               </div>
               <div class="q-pa-md row justify-evenly">
-                <q-btn label="Cerrar" color="green" @click="closeModalPersona" />
+                <q-btn label="Cerrar" color="negative" @click="closeModalPersona" />
               </div>
             </q-form>
           </q-card-section>
@@ -180,20 +188,85 @@
 
 
               <div class="q-pa-md row justify-between">
-                <div></div>
-                <q-btn label="Registrar y Finalizar" color="primary" @click="submitAndClose" />
                 <div class="q-pa-md row justify-center">
-                  <q-btn label="Guardar y Registrar Siguiente Mascota" color="teal" @click="submitAndContinue" />
+                  <q-btn label="Guardar y seguir registrando" color="teal" @click="submitAndContinue" />
                 </div>
-                <div v-if="mostrarBotonCancelar" class="q-pa-md row justify-center">
-                  <q-btn label="Cancelar y Cerrar" color="negative" @click="isModalMascotaOpen = false" />
+                <div class="q-pa-md row justify-center">
+                  <q-btn label="Registrar y finalizar" color="primary" @click="mostrarMascotasDirectamente" />
                 </div>
-
+                <div class="q-pa-md row justify-center">
+                  <q-btn label="Cerrar" color="negative" @click="isModalMascotaOpen = false"
+                    :disable="buttonsDisabled" />
+                </div>
               </div>
+
             </q-form>
           </q-card-section>
         </q-card>
       </q-dialog>
+
+      <!-- Modal para Historial de Vacunas -->
+      <q-dialog v-model="isModalVacunacionOpen" persistent>
+        <q-card style="min-width: 60vw; max-height: 90vh;">
+          <q-card-section>
+            <div class="text-h6">Historial de Vacunación de Mascotas</div>
+          </q-card-section>
+
+          <q-separator></q-separator>
+
+          <q-card-section>
+            <!-- Lista de mascotas del propietario seleccionado -->
+            <div v-if="mascotas.length > 0">
+              <div v-for="mascota in mascotas" :key="mascota.id">
+                <q-card>
+                  <q-card-section>
+                    <div class="foto-mascota">
+                      <q-img
+                        :src="`${storage.defaults.baseURL}/${mascota.fotoFrontal}` || 'https://via.placeholder.com/150'"
+                        alt="Foto del perro" class="mascota-imagen" />
+                    </div>
+                    <q-input filled v-model="mascota.nombre" label="Nombre del Perro" disable />
+                    <q-select v-model="mascota.miembroSeleccionado" label="Miembro de la Brigada" :options="miembrosBrigada.map(miembro => ({
+                      label: `${miembro.persona.nombres} ${miembro.persona.apellidos}`,
+                      value: miembro.id
+                    }))" filled />
+
+                    <!-- Botones de estado de vacunación -->
+                    <div class="q-mt-md">
+                      <q-btn block unelevated :color="mascota.vacunado === 1 ? 'green' : 'grey'"
+                        @click="mascota.vacunado = 1">
+                        <q-icon name="check" /> Vacunado
+                      </q-btn>
+                      <q-btn block unelevated :color="mascota.vacunado === 0 ? 'red' : 'grey'"
+                        @click="mascota.vacunado = 0">
+                        <q-icon name="close" /> No Vacunado
+                      </q-btn>
+                    </div>
+
+                    <!-- Motivo si no vacunado -->
+                    <div v-if="mascota.vacunado === 0" class="q-mt-md">
+                      <q-select v-model="mascota.motivo" label="Motivo de no vacunación" :options="[
+                        { label: 'Menor a 3 meses', value: 1 },
+                        { label: 'Gestación', value: 2 },
+                        { label: 'Enfermedad grave', value: 3 },
+                        { label: 'Ausente', value: 4 }
+                      ]" emit-value map-options />
+                    </div>
+
+                    <!-- Botón para guardar cambios -->
+                    <q-btn color="primary" label="Guardar" class="q-mt-md" @click="guardarHistorial(mascota)" />
+                  </q-card-section>
+                </q-card>
+              </div>
+              <!-- Botón para salir-->
+              <q-btn color="negative" label="Cerrar" class="q-mt-md" @click="closeModalVacunacion" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </q-dialog>
+
+
+
 
 
 
@@ -210,7 +283,7 @@ import Swal from 'sweetalert2';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Dropify from 'dropify';
-import { api, storage } from "boot/axios";
+import { api, customAxios, storage } from "boot/axios";
 // Importar Dropify CSS y JS
 import 'dropify/dist/css/dropify.min.css';
 import 'dropify/dist/js/dropify.min.js';
@@ -220,8 +293,12 @@ const router = useRouter();  // Crea una instancia del router
 
 // Función para registrar la mascota y cerrar el modal
 const submitAndClose = async () => {
-  await submitFormMascota(true);
-  router.push('/PaginaConsultaVacunas');
+
+
+
+  openModalVacunacion(); // Solo abre si hay mascotas
+
+
 };
 const $q = useQuasar();
 const mostrarBotonCancelar = ref(false);
@@ -233,6 +310,7 @@ const columns = [
   { name: 'telefono', label: 'Teléfono', field: 'telefono', align: 'center' },
   { name: 'foto', label: 'Foto', field: 'foto', align: 'center', format: val => val || 'Sin imagen' },  // Foto por defecto si está vacía
   { name: 'registro', label: 'Registrar Mascota', field: 'registro', align: 'center', sortable: false },
+  { name: 'vacuna', label: 'Registrar Vacuna', field: 'vacuna', align: 'center', sortable: false }, // Nueva columna
   { name: 'actions', label: 'Acciones', align: 'center' }
 ];
 
@@ -279,7 +357,7 @@ const getStorageUrl = (path) => {
     console.error('La propiedad foto no está definida:', path);  // Asegúrate de que el path esté definido
     return '';
   }
-  const url = `http://localhost:8000${path}`;
+  const url = `${customAxios.defaults.baseURL}${path}`;
   console.log('URL de la imagen generada:', url);  // Revisa que la URL esté bien formada
   return url;
 };
@@ -334,35 +412,27 @@ const closeModalPersona = () => {
 
 const openModalMascota = (nombre, apellidos, propietarioId) => {
   isModalMascotaOpen.value = true;
-  mostrarBotonCancelar.value = false;
-  // Verificación de los valores antes de concatenar
-  const nombreCompleto = `${nombre || ''
-    } ${apellidos || ''}`.trim();
+  buttonsDisabled.value = true; // Deshabilita los botones
 
-  mascotaData.value.propietario = nombreCompleto;  // Asignamos el nombre completo del propietario
-  mascotaData.value.propietario_id = propietarioId;  // Asignamos el ID del propietario
-  // Inicializar Dropify
+  const nombreCompleto = `${nombre || ''} ${apellidos || ''}`.trim();
+  mascotaData.value.propietario = nombreCompleto;
+  mascotaData.value.propietario_id = propietarioId;
+
   initializeDropify();
 };
+
 
 const openModalMascotas = (row) => {
   isModalMascotaOpen.value = true;
-  mostrarBotonCancelar.value = true;
-  // Verificar la estructura de 'row'
-  console.log("Datos de la fila seleccionada (row):", row);
-  // Concatenar el nombre completo del propietario de la fila seleccionada
-  const nombreCompleto = `${row.nombres_apellidos || ''
-    }`.trim();
+  buttonsDisabled.value = false; // Habilita los botones
 
+  const nombreCompleto = `${row.nombres_apellidos || ''}`.trim();
+  mascotaData.value.propietario = nombreCompleto;
+  mascotaData.value.propietario_id = Number(row.propietario_id);
 
-
-  // Asignar el nombre completo y el ID del propietario
-  mascotaData.value.propietario = nombreCompleto;  // Asignamos el nombre completo del propietario
-  mascotaData.value.propietario_id = Number(row.propietario_id);  // Asignamos el ID del propietario (puede variar dependiendo de tu estructura de datos)
-  console.log("Propietario ID enviado:", mascotaData.value.propietario_id);
-  // Inicializar Dropify
   initializeDropify();
 };
+
 
 const closeModalMascota = () => {
   isModalMascotaOpen.value = false;
@@ -631,6 +701,10 @@ const submitFormMascota = async (closeModal = true) => {
       message: 'Mascota registrada correctamente',
       position: 'top'
     });
+
+    // Habilitar los botones una vez registrado
+    buttonsDisabled.value = false;
+
     // Limpiar los campos de Dropify después de un registro exitoso
     const fotoFrontalElement = $('#fotoFrontal').dropify();
     fotoFrontalElement.data('dropify').resetPreview();
@@ -705,6 +779,7 @@ const onEspecieChange = (especie) => {
 
   fetchRazas(tipo); // Llamar a la función fetchRazas con el tipo adecuado
 };
+import axios from 'axios';
 
 
 // Cargar las razas al montar el componente
@@ -729,10 +804,110 @@ const filterRazas = (val, update) => {
   });
 };
 
+const isModalVacunacionOpen = ref(false);
 
+const openModalVacunacion = () => {
+  console.log("Abriendo modal de vacunación...");
+  isModalVacunacionOpen.value = true;
+};
+
+const closeModalVacunacion = () => {
+  isModalVacunacionOpen.value = false;
+};
+
+// Funciones reutilizadas del primer código para la búsqueda de propietarios, mascotas y el historial de vacunación
+const propietarios = ref([]);
+const propietarioSeleccionado = ref(null);
+const mascotas = ref([]);
+const miembrosBrigada = ref([]);
+
+const obtenerMiembrosBrigada = async () => {
+  try {
+    const brigadaId = localStorage.getItem('brigadaUserId');
+    const response = await api.get(`/brigadas/${brigadaId}/miembros`);
+    miembrosBrigada.value = response.data;
+  } catch (error) {
+    console.error("Error al obtener miembros de la brigada:", error);
+  }
+};
+
+const guardarHistorial = async (mascota) => {
+  try {
+    // Validación si no vacunado y motivo no seleccionado
+    if (mascota.vacunado === 0 && !mascota.motivo) {
+      $q.notify({
+        type: 'negative',
+        message: 'Debe seleccionar un motivo si la mascota no fue vacunada.'
+      });
+      return;
+    }
+
+    const data = {
+      estado: mascota.vacunado, // 1 para vacunado, 0 para no vacunado
+      motivo: mascota.vacunado === 0 ? mascota.motivo : null, // Ahora motivo es un entero
+      mascota_id: mascota.id,
+      miembro_id: mascota.miembroSeleccionado.value || mascota.miembroSeleccionado, // Obtener el ID del miembro
+      brigada_id: localStorage.getItem('brigadaUserId') // ID de la brigada
+    };
+
+    console.log("Datos enviados al backend:", data);
+
+    // Enviar los datos al backend
+    const response = await api.post('/historiavacunas', data);
+
+    if (response.status === 200) {
+      $q.notify({
+        type: 'positive',
+        message: 'Historial de vacunación guardado correctamente.'
+      });
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Error al guardar el historial de vacunación.'
+    });
+    console.error("Error:", error);
+  }
+};
+
+const mostrarMascotasDirectamente = async () => {
+  await submitFormMascota(false);
+  try {
+    const propietarioId = mascotaData.value.propietario_id;
+    const response = await api.get(`/propietarios/${propietarioId}/mascotas`);
+    closeModalMascota();
+    console.log('Mascotas cargadas:', response.data);
+    obtenerMiembrosBrigada();
+    mascotas.value = response.data;
+    openModalVacunacion();
+  } catch (error) {
+    console.error("Error al obtener las mascotas del propietario:", error);
+  }
+};
+
+// Estado para controlar si los botones deben estar deshabilitados o no
+const buttonsDisabled = ref(true);
+
+const openModalVacunaDirectamente = async (row) => {
+  try {
+    const propietarioId = row.propietario_id; // ID del propietario seleccionado
+    const response = await api.get(`/propietarios/${propietarioId}/mascotas`);
+
+    console.log('Mascotas cargadas:', response.data);
+    mascotas.value = response.data; // Asigna las mascotas al modal
+    obtenerMiembrosBrigada(); // Llamar a la función que carga los miembros de brigada
+    openModalVacunacion(); // Abre el modal de historial de vacunación
+  } catch (error) {
+    console.error("Error al obtener las mascotas del propietario:", error);
+    $q.notify({
+      type: 'negative',
+      message: 'Hubo un error al cargar las mascotas para vacunación',
+      position: 'top'
+    });
+  }
+};
 
 </script>
-
 <style scoped>
 #map {
   height: 300px;
@@ -751,5 +926,39 @@ const filterRazas = (val, update) => {
 
 .dropify-wrapper {
   margin-bottom: 20px;
+}
+
+.foto-mascota {
+  display: flex;
+  justify-content: center;
+}
+
+.mascota-imagen {
+  max-width: 150px;
+  border-radius: 10px;
+}
+
+.q-td img {
+  width: 80px;
+  /* Ancho estándar */
+  height: 80px;
+  /* Altura estándar */
+  object-fit: cover;
+  /* Mantiene el recorte adecuado */
+  border-radius: 5px;
+  /* Redondeo de bordes */
+}
+
+.foto-mascota img {
+  width: 100px;
+  /* Ancho fijo */
+  height: 100px;
+  /* Altura fija */
+  object-fit: cover;
+  /* Mantiene el recorte adecuado */
+  border-radius: 10px;
+  /* Redondeo de bordes */
+  margin-bottom: 10px;
+  /* Espacio entre la imagen y el contenido */
 }
 </style>

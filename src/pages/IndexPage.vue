@@ -65,7 +65,7 @@
         <q-card-section>
           <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
           <div class="text-h6 text-white q-mb-md">Perros Registrados por Raza</div>
-          <ApexChartComponent type="bar" :options="perrosPorRazaChartOptions" :series="perrosPorRazaChartSeries" />
+          <ApexChartComponent type="donut" :options="perrosPorRazaChartOptions" :series="perrosPorRazaChartSeries" />
         </q-card-section>
       </q-card>
 
@@ -105,34 +105,12 @@
         </q-card-section>
       </q-card>
     </div>
-
-    <!-- Segunda fila de gráficos -->
-    <div class="row justify-center q-col-gutter-md q-mb-md q-mt-md">
-      <!-- Gráfico 4: Brigadas Asignadas por Zona -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
-        <q-card-section>
-          <q-icon name="trending_up" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Brigadas Asignadas por Zona</div>
-          <ApexChartComponent type="bar" :options="brigadasPorZonaChartOptions" :series="brigadasPorZonaChartSeries" />
-        </q-card-section>
-      </q-card>
-
-      <!-- Gráfico 5: Relación entre Mascotas y Propietarios -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
-        <q-card-section>
-          <q-icon name="group" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Relación Mascotas y Propietarios</div>
-          <ApexChartComponent type="bar" :options="mascotasPropietariosChartOptions"
-            :series="mascotasPropietariosChartSeries" />
-        </q-card-section>
-      </q-card>
-    </div>
   </q-page>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { api } from 'boot/axios';
+import { api, storage, customAxios } from 'boot/axios';
 
 
 // Variables para almacenar los datos de las tarjetas
@@ -158,9 +136,9 @@ const mascotasPorEspecieChartOptions = ref({
 });
 
 const perrosPorRazaChartOptions = ref({
-  chart: { type: 'bar', foreColor: '#fff' },
-  xaxis: { categories: [], labels: { style: { colors: ['#fff'] } } },
-  yaxis: { labels: { style: { colors: ['#fff'] } } }
+  chart: { type: 'donut', foreColor: '#fff' }, // Cambiado a 'donut'
+  labels: [], // Las razas se agregarán aquí
+  legend: { position: 'bottom', labels: { colors: ['#fff'] } }
 });
 
 const gatosPorRazaChartOptions = ref({
@@ -217,42 +195,63 @@ const fetchDashboardData = async () => {
     const response = await api.get('/dashboard-data');
     const data = response.data;
 
-    // Actualizar datos de las tarjetas
+    // Actualizar tarjetas de resumen
     totalMascotas.value = data.totalMascotas;
     totalVacunadas.value = data.totalVacunadas;
     totalNoVacunadas.value = data.totalNoVacunadas;
     totalCampanas.value = data.totalCampanas;
     totalPropietarios.value = data.totalPropietarios;
-    totalMascotas.value = data.mascotasRegistradas;
-    totalVacunadas.value = data.mascotasVacunadasYNo.vacunadas;
-    totalNoVacunadas.value = data.mascotasVacunadasYNo.no_vacunadas;
-    // Actualizar gráficos
+
+    // Actualizar gráfico de Donut: "Distribución de Mascotas por Especie"
     mascotasPorEspecieChartSeries.value = Object.values(data.mascotasPorEspecie);
-    mascotasPorEspecieChartOptions.value.labels = Object.keys(data.mascotasPorEspecie);
-    mascotasPorEspecieChartSeries.value = Object.values(data.mascotasPorEspecie);
-    mascotasPorEspecieChartOptions.value.labels = Object.keys(data.mascotasPorEspecie);
-    perrosPorRazaChartSeries.value = [
-      {
-        name: 'Perros',
-        data: Object.values(data.perrosPorRaza)
-      }
+    // Aquí actualizamos el campo "labels" de las opciones sin sobrescribir el objeto completo
+    mascotasPorEspecieChartOptions.value = {
+      ...mascotasPorEspecieChartOptions.value,
+      labels: Object.keys(data.mascotasPorEspecie) // Las especies
+    };
+
+    // Actualizar gráfico de Donut: "Perros Registrados por Raza"
+    perrosPorRazaChartSeries.value = Object.values(data.perrosPorRaza);  // Las cantidades
+    perrosPorRazaChartOptions.value = {
+      ...perrosPorRazaChartOptions.value,
+      labels: Object.keys(data.perrosPorRaza)  // Las razas
+    };
+    perrosPorRazaChartOptions.value = {
+      ...perrosPorRazaChartOptions.value,
+      xaxis: { categories: Object.keys(data.perrosPorRaza) } // Las razas
+    };
+
+    // Actualizar gráfico de Donut: "Gatos Registrados por Raza"
+    gatosPorRazaChartSeries.value = Object.values(data.gatosPorRaza);  // Las cantidades
+    gatosPorRazaChartOptions.value = {
+      ...gatosPorRazaChartOptions.value,
+      labels: Object.keys(data.gatosPorRaza)  // Las razas
+    };
+
+    // Actualizar gráfico de Pie: "Mascotas Vacunadas y No Vacunadas"
+    mascotasVacunadasChartSeries.value = [
+      data.mascotasVacunadasYNo.vacunadas,
+      data.mascotasVacunadasYNo.no_vacunadas
     ];
-    perrosPorRazaChartOptions.value.xaxis.categories = Object.keys(data.perrosPorRaza);
 
-    gatosPorRazaChartSeries.value = Object.values(data.gatosPorRaza);
-    gatosPorRazaChartOptions.value.labels = Object.keys(data.gatosPorRaza);
+    // Actualizar gráfico de Pie: "Perros Vacunados y No Vacunados"
+    perrosVacunadosChartSeries.value = [
+      data.perrosVacunadosYNo.vacunados,
+      data.perrosVacunadosYNo.no_vacunados
+    ];
 
-    brigadasPorZonaChartSeries.value = [{ name: 'Brigadas', data: Object.values(data.brigadasPorZona) }];
-    brigadasPorZonaChartOptions.value.xaxis.categories = Object.keys(data.brigadasPorZona);
-    mascotasVacunadasChartSeries.value = [data.mascotasVacunadasYNo.vacunadas, data.mascotasVacunadasYNo.no_vacunadas];
-    perrosVacunadosChartSeries.value = [data.perrosVacunadosYNo.vacunados, data.perrosVacunadosYNo.no_vacunados];
-    gatosVacunadosChartSeries.value = [data.gatosVacunadosYNo.vacunados, data.gatosVacunadosYNo.no_vacunados];
-    mascotasPropietariosChartSeries.value = [{ name: 'Relación', data: [data.mascotasRegistradas, data.propietariosRegistrados] }];
+    // Actualizar gráfico de Pie: "Gatos Vacunados y No Vacunados"
+    gatosVacunadosChartSeries.value = [
+      data.gatosVacunadosYNo.vacunados,
+      data.gatosVacunadosYNo.no_vacunados
+    ];
 
   } catch (error) {
     console.error('Error obteniendo los datos del dashboard:', error);
   }
 };
+
+
 
 // Ejecutar la función cuando el componente se monte
 onMounted(fetchDashboardData);

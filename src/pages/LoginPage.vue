@@ -44,10 +44,9 @@
 
 <script>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router'; // Importa el router
+import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { api } from 'boot/axios'; // Usando la configuración de Axios que proporcionaste
-
+import { api } from 'boot/axios';
 export default {
   name: 'LoginPage',
   setup() {
@@ -108,14 +107,12 @@ export default {
           const brigadaResponse = await api.get(`/brigadas/usuario/${userId}`);
 
           if (brigadaResponse.data.exists) {
-            const brigadaId = brigadaResponse.data.brigada_id; // Asumiendo que tu API devuelve el ID de la brigada
+            const brigadaId = brigadaResponse.data.brigada_id; // API devuelve el ID de la brigada
             localStorage.setItem('brigadaUserId', brigadaId);
             console.log('Usuario es parte de brigadas, ID de brigada guardado en localStorage:', brigadaId);
           } else {
             console.log('Usuario no está en brigadas');
           }
-
-          // Redirigir al usuario después de login exitoso
           console.log("Login exitoso, redirigiendo...");
           router.push('/');
         } else {
@@ -148,7 +145,6 @@ export default {
 
 
 <style scoped>
-/* Estilos originales que proporcionaste, se mantienen sin cambios */
 .login-page {
   background: linear-gradient(to bottom right, #3c8dbc, #f3f3f3);
   height: 100%;
