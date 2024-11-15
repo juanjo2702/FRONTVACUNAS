@@ -48,35 +48,44 @@
       </q-card>
     </div>
 
-    <!-- Fila de gráficos principales (Primera fila de gráficos) -->
-    <div class="row justify-center q-col-gutter-md q-mb-md q-mt-md">
-      <!-- Gráfico 1: Distribución de Mascotas por Especie -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+    <!-- Segunda fila: Distribución de Mascotas por Especie -->
+    <div class="row justify-center q-mb-md">
+      <q-card class="col-10 col-md-8 q-mb-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Distribución de Mascotas por Especie</div>
+          <div class="text-h6 text-white q-mb-md text-center">Distribución de Mascotas por Especie</div>
           <ApexChartComponent type="donut" :options="mascotasPorEspecieChartOptions"
             :series="mascotasPorEspecieChartSeries" />
         </q-card-section>
       </q-card>
+    </div>
 
-      <!-- Gráfico 2: Perros por Raza -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+    <!-- Tercera fila: Perros Registrados por Raza -->
+    <div class="row justify-center q-mb-md">
+      <q-card class="col-10 col-md-8 q-mb-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Perros Registrados por Raza</div>
-          <ApexChartComponent type="donut" :options="perrosPorRazaChartOptions" :series="perrosPorRazaChartSeries" />
+          <div class="text-h6 text-white q-mb-md text-center">Perros Registrados por Raza</div>
+          <ApexChartComponent type="treemap" :options="perrosPorRazaChartOptions"
+            :series="[{ data: perrosPorRazaChartSeries }]" />
         </q-card-section>
       </q-card>
+    </div>
 
-      <!-- Gráfico 3: Gatos por Raza (Rosquilla) -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+    <!-- Cuarta fila: Gatos Registrados por Raza -->
+    <div class="row justify-center q-mb-md">
+      <q-card class="col-10 col-md-8 q-mb-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="bar_chart" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md">Gatos Registrados por Raza</div>
-          <ApexChartComponent type="donut" :options="gatosPorRazaChartOptions" :series="gatosPorRazaChartSeries" />
+          <div class="text-h6 text-white q-mb-md text-center">Gatos Registrados por Raza</div>
+          <ApexChartComponent type="treemap" :options="gatosPorRazaChartOptions"
+            :series="[{ data: gatosPorRazaChartSeries }]" />
         </q-card-section>
       </q-card>
+    </div>
+
+    <!-- Quinta fila: Control de Vacunación (Tres gráficos en una sola fila) -->
+    <div class="row justify-center q-col-gutter-md q-mb-md q-mt-md">
       <!-- Gráfico 6: Control de Mascotas Vacunadas y No Vacunadas -->
       <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
         <q-card-section>
@@ -108,6 +117,7 @@
   </q-page>
 </template>
 
+
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api, storage, customAxios } from 'boot/axios';
@@ -136,15 +146,51 @@ const mascotasPorEspecieChartOptions = ref({
 });
 
 const perrosPorRazaChartOptions = ref({
-  chart: { type: 'donut', foreColor: '#fff' }, // Cambiado a 'donut'
-  labels: [], // Las razas se agregarán aquí
-  legend: { position: 'bottom', labels: { colors: ['#fff'] } }
+  chart: {
+    type: 'treemap',
+    foreColor: '#fff'
+  },
+  title: {
+    text: 'Distribución de Perros por Raza',
+    align: 'center',
+    style: {
+      color: '#fff'
+    }
+  },
+  legend: {
+    show: false
+  },
+  plotOptions: {
+    treemap: {
+      distributed: true,
+      enableShades: false
+    }
+  },
+  colors: ['#FF4560', '#00E396', '#008FFB', '#FEB019', '#FF66B2']
 });
 
 const gatosPorRazaChartOptions = ref({
-  chart: { type: 'donut', foreColor: '#fff' },
-  labels: [],
-  legend: { position: 'bottom', labels: { colors: ['#fff'] } }
+  chart: {
+    type: 'treemap',
+    foreColor: '#fff'
+  },
+  title: {
+    text: 'Distribución de Gatos por Raza',
+    align: 'center',
+    style: {
+      color: '#fff'
+    }
+  },
+  legend: {
+    show: false
+  },
+  plotOptions: {
+    treemap: {
+      distributed: true,
+      enableShades: false
+    }
+  },
+  colors: ['#FF4560', '#00E396', '#008FFB', '#FEB019', '#FF66B2']
 });
 
 const mascotasPropietariosChartOptions = ref({
@@ -204,28 +250,61 @@ const fetchDashboardData = async () => {
 
     // Actualizar gráfico de Donut: "Distribución de Mascotas por Especie"
     mascotasPorEspecieChartSeries.value = Object.values(data.mascotasPorEspecie);
-    // Aquí actualizamos el campo "labels" de las opciones sin sobrescribir el objeto completo
     mascotasPorEspecieChartOptions.value = {
       ...mascotasPorEspecieChartOptions.value,
       labels: Object.keys(data.mascotasPorEspecie) // Las especies
     };
 
-    // Actualizar gráfico de Donut: "Perros Registrados por Raza"
-    perrosPorRazaChartSeries.value = Object.values(data.perrosPorRaza);  // Las cantidades
+    // Configuración para el gráfico TreeMap: "Perros Registrados por Raza"
+    perrosPorRazaChartSeries.value = Object.keys(data.perrosPorRaza).map((raza) => ({
+      x: raza,
+      y: data.perrosPorRaza[raza]
+    }));
     perrosPorRazaChartOptions.value = {
-      ...perrosPorRazaChartOptions.value,
-      labels: Object.keys(data.perrosPorRaza)  // Las razas
-    };
-    perrosPorRazaChartOptions.value = {
-      ...perrosPorRazaChartOptions.value,
-      xaxis: { categories: Object.keys(data.perrosPorRaza) } // Las razas
+      chart: { type: 'treemap', foreColor: '#fff', height: 350 },
+      plotOptions: {
+        treemap: {
+          distributed: true,
+          enableShades: true,
+          shadeIntensity: 0.5
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        style: {
+          colors: ['#fff']
+        },
+        formatter: function (val, opt) {
+          return `${opt.w.globals.labels[opt.dataPointIndex]}: ${val}`; // Muestra la raza y cantidad
+        }
+      },
+      colors: ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0'] // Colores para cada cuadro
     };
 
-    // Actualizar gráfico de Donut: "Gatos Registrados por Raza"
-    gatosPorRazaChartSeries.value = Object.values(data.gatosPorRaza);  // Las cantidades
+    // Configuración para el gráfico TreeMap: "Gatos Registrados por Raza"
+    gatosPorRazaChartSeries.value = Object.keys(data.gatosPorRaza).map((raza) => ({
+      x: raza,
+      y: data.gatosPorRaza[raza]
+    }));
     gatosPorRazaChartOptions.value = {
-      ...gatosPorRazaChartOptions.value,
-      labels: Object.keys(data.gatosPorRaza)  // Las razas
+      chart: { type: 'treemap', foreColor: '#fff', height: 350 },
+      plotOptions: {
+        treemap: {
+          distributed: true,
+          enableShades: true,
+          shadeIntensity: 0.5
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        style: {
+          colors: ['#fff']
+        },
+        formatter: function (val, opt) {
+          return `${opt.w.globals.labels[opt.dataPointIndex]}: ${val}`; // Muestra la raza y cantidad
+        }
+      },
+      colors: ['#FF4560', '#FEB019', '#775DD0', '#008FFB', '#00E396'] // Colores para cada cuadro
     };
 
     // Actualizar gráfico de Pie: "Mascotas Vacunadas y No Vacunadas"
@@ -250,6 +329,10 @@ const fetchDashboardData = async () => {
     console.error('Error obteniendo los datos del dashboard:', error);
   }
 };
+
+
+
+
 
 
 
