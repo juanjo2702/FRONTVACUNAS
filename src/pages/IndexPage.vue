@@ -48,46 +48,44 @@
       </q-card>
     </div>
 
-    <!-- Segunda fila: Distribución de Mascotas por Especie -->
-    <div class="row justify-center q-mb-md">
-      <q-card class="col-10 col-md-8 q-mb-md" style="background-color: #24395D;">
-        <q-card-section>
-          <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md text-center">Distribución de Mascotas por Especie</div>
-          <ApexChartComponent type="donut" :options="mascotasPorEspecieChartOptions"
-            :series="mascotasPorEspecieChartSeries" />
-        </q-card-section>
-      </q-card>
-    </div>
 
-    <!-- Tercera fila: Perros Registrados por Raza -->
-    <div class="row justify-center q-mb-md">
-      <q-card class="col-10 col-md-8 q-mb-md" style="background-color: #24395D;">
+    <!-- Fila para Perros por Raza y Gatos por Raza -->
+    <div class="row justify-center q-col-gutter-md q-mb-md">
+      <!-- Perros Registrados por Raza - Ocupa mitad de la fila -->
+      <q-card class="col-12 col-md-6 q-mb-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md text-center">Perros Registrados por Raza</div>
+          <div class="text-h6 text-white q-mb-md">Perros Registrados por Raza</div>
           <ApexChartComponent type="treemap" :options="perrosPorRazaChartOptions"
             :series="[{ data: perrosPorRazaChartSeries }]" />
         </q-card-section>
       </q-card>
-    </div>
 
-    <!-- Cuarta fila: Gatos Registrados por Raza -->
-    <div class="row justify-center q-mb-md">
-      <q-card class="col-10 col-md-8 q-mb-md" style="background-color: #24395D;">
+      <!-- Gatos Registrados por Raza - Ocupa mitad de la fila -->
+      <q-card class="col-12 col-md-6 q-mb-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="bar_chart" size="30px" class="q-mb-md" style="color: white;" />
-          <div class="text-h6 text-white q-mb-md text-center">Gatos Registrados por Raza</div>
+          <div class="text-h6 text-white q-mb-md">Gatos Registrados por Raza</div>
           <ApexChartComponent type="treemap" :options="gatosPorRazaChartOptions"
             :series="[{ data: gatosPorRazaChartSeries }]" />
         </q-card-section>
       </q-card>
     </div>
 
-    <!-- Quinta fila: Control de Vacunación (Tres gráficos en una sola fila) -->
+    <!-- Fila de gráficos (Distribución y Control de Vacunación) -->
     <div class="row justify-center q-col-gutter-md q-mb-md q-mt-md">
-      <!-- Gráfico 6: Control de Mascotas Vacunadas y No Vacunadas -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+      <!-- Distribución de Mascotas por Especie -->
+      <q-card class="col-12 col-md-3 q-mb-md" style="background-color: #24395D;">
+        <q-card-section>
+          <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
+          <div class="text-h6 text-white q-mb-md">Distribución de Mascotas por Especie</div>
+          <ApexChartComponent type="donut" :options="mascotasPorEspecieChartOptions"
+            :series="mascotasPorEspecieChartSeries" />
+        </q-card-section>
+      </q-card>
+
+      <!-- Control de Mascotas Vacunadas y No Vacunadas -->
+      <q-card class="col-12 col-md-3 q-mb-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="vaccines" size="30px" class="q-mb-md" style="color: white;" />
           <div class="text-h6 text-white q-mb-md">Control de Mascotas Vacunadas y No Vacunadas</div>
@@ -96,8 +94,8 @@
         </q-card-section>
       </q-card>
 
-      <!-- Gráfico 7: Perros Vacunados y No Vacunados -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+      <!-- Perros Vacunados y No Vacunados -->
+      <q-card class="col-12 col-md-3 q-mb-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
           <div class="text-h6 text-white q-mb-md">Perros Vacunados y No Vacunados</div>
@@ -105,8 +103,8 @@
         </q-card-section>
       </q-card>
 
-      <!-- Gráfico 8: Gatos Vacunados y No Vacunados -->
-      <q-card class="col-12 col-md-3 q-mb-md q-mx-md" style="background-color: #24395D;">
+      <!-- Gatos Vacunados y No Vacunados -->
+      <q-card class="col-12 col-md-3 q-mb-md" style="background-color: #24395D;">
         <q-card-section>
           <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
           <div class="text-h6 text-white q-mb-md">Gatos Vacunados y No Vacunados</div>
@@ -139,11 +137,34 @@ const mascotasPropietariosChartSeries = ref([]);
 
 // Opciones de los gráficos
 const mascotasPorEspecieChartOptions = ref({
-  chart: { type: 'donut', foreColor: '#fff' },
+  chart: {
+    type: 'donut',
+    foreColor: '#fff',
+    height: 300 // Limita la altura del gráfico a 300px
+  },
   labels: [],
   colors: ['#FF4560', '#00E396', '#008FFB', '#FEB019'],
-  legend: { position: 'bottom', labels: { colors: ['#fff'] } }
+  legend: {
+    position: 'bottom',
+    labels: { colors: ['#fff'] }
+  },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '65%' // Ajusta el tamaño interno del anillo para que sea más pequeño
+      }
+    }
+  },
+  responsive: [{
+    breakpoint: 768,
+    options: {
+      chart: {
+        height: 250 // Ajusta la altura para pantallas más pequeñas
+      }
+    }
+  }]
 });
+
 
 const perrosPorRazaChartOptions = ref({
   chart: {
