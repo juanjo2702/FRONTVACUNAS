@@ -50,9 +50,9 @@
 
 
     <!-- Fila para Perros por Raza y Gatos por Raza -->
-    <div class="row justify-center q-col-gutter-md q-mb-md">
-      <!-- Perros Registrados por Raza - Ocupa mitad de la fila -->
-      <q-card class="col-12 col-md-6 q-mb-md" style="background-color: #24395D;">
+    <div class="row justify-center q-col-gutter-sm q-mb-md" style="margin-bottom: 1.5rem;">
+      <!-- Perros Registrados por Raza -->
+      <q-card class="col-12 col-md-5 q-mb-md" style="background-color: #24395D; margin-right: 0.5rem;">
         <q-card-section>
           <q-icon name="pets" size="30px" class="q-mb-md" style="color: white;" />
           <div class="text-h6 text-white q-mb-md">Perros Registrados por Raza</div>
@@ -61,8 +61,8 @@
         </q-card-section>
       </q-card>
 
-      <!-- Gatos Registrados por Raza - Ocupa mitad de la fila -->
-      <q-card class="col-12 col-md-6 q-mb-md" style="background-color: #24395D;">
+      <!-- Gatos Registrados por Raza -->
+      <q-card class="col-12 col-md-5 q-mb-md" style="background-color: #24395D; margin-left: 0.5rem;">
         <q-card-section>
           <q-icon name="bar_chart" size="30px" class="q-mb-md" style="color: white;" />
           <div class="text-h6 text-white q-mb-md">Gatos Registrados por Raza</div>
@@ -171,13 +171,7 @@ const perrosPorRazaChartOptions = ref({
     type: 'treemap',
     foreColor: '#fff'
   },
-  title: {
-    text: 'Distribución de Perros por Raza',
-    align: 'center',
-    style: {
-      color: '#fff'
-    }
-  },
+
   legend: {
     show: false
   },
@@ -195,13 +189,7 @@ const gatosPorRazaChartOptions = ref({
     type: 'treemap',
     foreColor: '#fff'
   },
-  title: {
-    text: 'Distribución de Gatos por Raza',
-    align: 'center',
-    style: {
-      color: '#fff'
-    }
-  },
+
   legend: {
     show: false
   },
