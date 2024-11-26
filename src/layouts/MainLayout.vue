@@ -17,7 +17,7 @@
       <div class="divider"></div>
       <q-list>
 
-        <router-link to="/" exact-active-class="q-item-active-selected"
+        <router-link v-if="canAccess(['3', '2'])" to="/" exact-active-class="q-item-active-selected"
           class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
           <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
             <div class="flex-row" style="display: flex; align-items: center;">
@@ -27,7 +27,7 @@
           </q-item-section>
         </router-link>
 
-        <router-link to="/PaginaRegistroJefeZona" exact-active-class="q-item-active-selected"
+        <router-link v-if="canAccess(['3'])" to="/PaginaRegistroJefeZona" exact-active-class="q-item-active-selected"
           class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
           <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
             <div class="flex-row" style="display: flex; align-items: center;">
@@ -37,17 +37,7 @@
           </q-item-section>
         </router-link>
 
-        <router-link to="/PaginaRegistroMiembros" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
-          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
-            <div class="flex-row" style="display: flex; align-items: center;">
-              <q-icon name="groups" size="md" color="white" />
-              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">MIEMBROS</span>
-            </div>
-          </q-item-section>
-        </router-link>
-
-        <router-link to="/PaginaRegistroCampania" exact-active-class="q-item-active-selected"
+        <router-link v-if="canAccess(['3'])" to="/PaginaRegistroCampania" exact-active-class="q-item-active-selected"
           class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
           <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
             <div class="flex-row" style="display: flex; align-items: center;">
@@ -57,7 +47,7 @@
           </q-item-section>
         </router-link>
 
-        <router-link to="/PaginaRegistroZona" exact-active-class="q-item-active-selected"
+        <router-link v-if="canAccess(['3'])" to="/PaginaRegistroZona" exact-active-class="q-item-active-selected"
           class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
           <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
             <div class="flex-row" style="display: flex; align-items: center;">
@@ -67,7 +57,7 @@
           </q-item-section>
         </router-link>
 
-        <router-link to="/PaginaRegistros" exact-active-class="q-item-active-selected"
+        <router-link v-if="canAccess(['3', '2', '1'])" to="/PaginaRegistros" exact-active-class="q-item-active-selected"
           class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
           <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
             <div class="flex-row" style="display: flex; align-items: center;">
@@ -77,8 +67,9 @@
           </q-item-section>
         </router-link>
 
-        <router-link to="/PaginaRegistroVacunas" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+        <router-link v-if="canAccess(['3', '2'])" to="/PaginaRegistroVacunas"
+          exact-active-class="q-item-active-selected" class="q-item q-item-type row no-wrap custom-link"
+          style="text-decoration: none;">
           <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
             <div class="flex-row" style="display: flex; align-items: center;">
               <q-icon name="vaccines" size="md" color="white" />
@@ -87,8 +78,9 @@
           </q-item-section>
         </router-link>
 
-        <router-link to="/PaginaConsultaVacunas" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+        <router-link v-if="canAccess(['3', '2', '1'])" to="/PaginaConsultaVacunas"
+          exact-active-class="q-item-active-selected" class="q-item q-item-type row no-wrap custom-link"
+          style="text-decoration: none;">
           <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
             <div class="flex-row" style="display: flex; align-items: center;">
               <q-icon name="search" size="md" color="white" />
@@ -111,11 +103,14 @@
 
 <script>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 export default {
   setup() {
     const leftDrawerOpen = ref(false);
     const userName = ref(localStorage.getItem('userName') || ''); // Suponiendo que el nombre de usuario está almacenado en localStorage
+    const userRoleId = localStorage.getItem('userRoleId');
+    const router = useRouter();
 
     const toggleLeftDrawer = () => {
       leftDrawerOpen.value = !leftDrawerOpen.value;
@@ -124,7 +119,27 @@ export default {
     const logout = () => {
       localStorage.removeItem('authToken'); // Elimina el token de autenticación
       localStorage.removeItem('userName'); // Elimina el nombre de usuario
+      localStorage.removeItem('userRoleId'); // Elimina el rol del usuario
       window.location.href = '/login';      // Redirige a la página de login
+    };
+
+    const canAccess = (roles) => {
+      return roles.includes(userRoleId);
+    };
+
+    // Redirección después del login según el rol
+    const redirectToHome = () => {
+      switch (userRoleId) {
+        case '3': // Administrador
+        case '2': // Jefe de Zona
+          router.push('/'); // Redirige al inicio
+          break;
+        case '1': // Brigada
+          router.push('/PaginaRegistroMiembros'); // Redirige a Registro de Miembros
+          break;
+        default:
+          router.push('/login'); // Redirige al login si no se reconoce el rol
+      }
     };
 
     return {
@@ -132,8 +147,13 @@ export default {
       userName,
       toggleLeftDrawer,
       logout,
+      canAccess,
+      redirectToHome
     };
   },
+  mounted() {
+    this.redirectToHome(); // Ejecuta la redirección al montar el componente
+  }
 };
 </script>
 
