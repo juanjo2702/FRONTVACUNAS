@@ -108,6 +108,28 @@ export default {
       mascotas.value = [];
     };
 
+    const mascotaImage = async (fotoFrontal) => {
+      try {
+        const response = await $storage.get(`/${fotoFrontal}`, { responseType: 'blob' });
+        return URL.createObjectURL(response.data); // Convierte el blob en una URL usable por el navegador
+      } catch (error) {
+        console.error("Error obteniendo la imagen:", error);
+        return 'https://via.placeholder.com/150'; // Retorna un placeholder si ocurre un error
+      }
+    };
+
+
+    const obtenerHistorialVacunas = async (mascotaId) => {
+      try {
+        const response = await api.get(`/mascota/${mascotaId}/historial-vacunas`);
+        console.log('Historial recibido:', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('Error al obtener el historial de vacunación:', error);
+        return [];
+      }
+    };
+
     const mostrarMascotas = async () => {
       if (propietarioSeleccionado.value) {
         try {
@@ -131,29 +153,33 @@ export default {
       const doc = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
-        format: [110, 85] // Tamaño ajustado
+        format: [110, 85], // Tamaño ajustado
       });
 
       // Fondo del carnet (anverso)
-      doc.setFillColor(242, 242, 242); // Color
-      doc.rect(0, 0, 110, 85, 'F'); // Relleno del
+      doc.setFillColor(242, 242, 242);
+      doc.rect(0, 0, 110, 85, 'F');
 
       // Encabezado del carnet (anverso)
-      doc.setFillColor(0, 102, 204); // Azul elegante
-      doc.rect(0, 0, 110, 15, 'F'); // Fondo del encabezado
-      doc.setTextColor(255, 255, 255); // Texto blanco
+      doc.setFillColor(0, 102, 204);
+      doc.rect(0, 0, 110, 15, 'F');
+      doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
-      doc.text('Carnet de Mascota', 55, 10, { align: 'center' }); // Título centrado
+      doc.text('Carnet de Mascota', 55, 10, { align: 'center' });
 
-      // Imagen de la mascota
-      const imgSrc = `/storage/${mascota.fotoFrontal}`;
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.src = imgSrc;
 
       img.onload = async () => {
-        doc.addImage(img, 'JPEG', 8, 20, 35, 35); // Tamaño ajustado y centrado
+        const imgSrc = await api.get(`/storage/${mascota.fotoFrontal}`, { responseType: 'blob' })
+          .then(response => URL.createObjectURL(response.data))
+          .catch(error => {
+            console.error("Error obteniendo la imagen:", error);
+            return '/storage/placeholder.png'; // Usa una imagen alternativa si falla
+          });
+        doc.addImage(imgSrc, 'JPEG', 8, 20, 35, 35);
 
         // Información de la mascota
         doc.setTextColor(0, 0, 0);
@@ -166,9 +192,8 @@ export default {
         doc.text(`Raza: ${mascota.raza}`, 50, 34);
         doc.text(`Tamaño: ${mascota.tamanio}`, 50, 38);
 
-        // Línea divisoria
         doc.setDrawColor(0, 102, 204);
-        doc.line(45, 42, 100, 42); // Línea horizontal
+        doc.line(45, 42, 100, 42);
 
         // Información del propietario
         doc.setFont('helvetica', 'bold');
@@ -181,11 +206,9 @@ export default {
         // Reverso - Historial de vacunas
         doc.addPage();
 
-        // Fondo del reverso
         doc.setFillColor(255, 255, 255);
         doc.rect(0, 0, 110, 85, 'F');
 
-        // Encabezado del reverso
         doc.setFillColor(0, 102, 204);
         doc.rect(0, 0, 110, 15, 'F');
         doc.setTextColor(255, 255, 255);
@@ -194,47 +217,44 @@ export default {
         doc.text('Historial de Vacunas', 55, 10, { align: 'center' });
 
         // Obtener historial de vacunas
-        let historial = [];
-        if (mascota && mascota.id) {
-          try {
-            const response = await api.get(`/mascota/${mascota.id}/historial-vacunas`);
-            historial = response.data;
+        try {
+          const response = await api.get(`/mascota/${mascota.id}/historial-vacunas`);
+          const historial = response.data;
 
-            // Conversión de motivo
-            const motivoMap = {
-              1: 'Menor a 3 meses',
-              2: 'Gestación',
-              3: 'Enfermedad grave',
-              4: 'Ausente'
-            };
+          const motivoMap = {
+            1: 'Menor a 3 meses',
+            2: 'Gestación',
+            3: 'Enfermedad grave',
+            4: 'Ausente',
+          };
 
-            // Mostrar cada entrada de historial de vacunación
-            doc.setTextColor(0, 0, 0);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            let yPosition = 20;
+          doc.setTextColor(0, 0, 0);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(10);
 
-            historial.forEach((registro, index) => {
-              const motivoTexto = motivoMap[registro.motivo] || ''; // Convertir motivo si existe
+          let yPosition = 20;
+          historial.forEach((registro, index) => {
+            // Ajustar la fecha (restar 5 horas)
+            const fechaVacunacion = new Date(registro.created_at);
+            fechaVacunacion.setHours(fechaVacunacion.getHours() - 5);
+            const fechaFormateada = fechaVacunacion.toISOString().split('T')[0];
 
-              doc.text(`${index + 1}. Estado: ${registro.estado === 1 ? 'Vacunado' : 'No Vacunado'}`, 8, yPosition);
+            doc.text(`${index + 1}. Estado: ${registro.estado === 1 ? 'Vacunado' : 'No Vacunado'}`, 8, yPosition);
+            doc.text(`Fecha vacunación: ${fechaFormateada}`, 8, yPosition + 4);
 
-              // Solo mostrar el motivo si existe
-              if (registro.motivo) {
-                doc.text(`Motivo: ${motivoTexto}`, 8, yPosition + 4);
-                yPosition += 4; // Aumentar el espacio solo si se muestra el motivo
-              }
+            if (registro.motivo) {
+              // Solo agregar el motivo si existe
+              doc.text(`Motivo: ${motivoMap[registro.motivo] || ''}`, 8, yPosition + 8);
+              yPosition += 4; // Aumentar espacio si se agregó el motivo
+            }
 
-              doc.text(`Campaña: ${registro.campania_nombre}`, 8, yPosition + 4);
-              doc.text(`Fecha fin: ${registro.campania_fecha_fin}`, 8, yPosition + 8);
-              yPosition += 20; // Espacio para el siguiente registro
-            });
-
-          } catch (error) {
-            console.error('Error obteniendo historial de vacunas', error);
-          }
-        } else {
-          console.error('La mascota no tiene un ID válido');
+            doc.text(`Campaña: ${registro.campania_nombre}`, 8, yPosition + 8);
+            yPosition += 16; // Espacio para el siguiente registro
+          });
+        } catch (error) {
+          console.error('Error obteniendo historial de vacunas:', error);
+          doc.setFont('helvetica', 'normal');
+          doc.text('No se pudo obtener el historial de vacunas.', 8, 20);
         }
 
         doc.save(`Carnet_Mascota_${mascota.nombre}.pdf`);
@@ -242,15 +262,14 @@ export default {
 
       img.onerror = () => {
         const placeholder = new Image();
-        placeholder.src = `${$storage.defaults.baseURL}/placeholder.png`; // Usa la URL base de storage
+        placeholder.src = '/storage/placeholder.png';
         placeholder.onload = () => {
-          doc.addImage(placeholder, 'JPEG', 8, 20, 35, 35); // Imagen de reemplazo
-          doc.setDrawColor(0, 102, 204);
-          doc.rect(8, 20, 35, 35);
+          doc.addImage(placeholder, 'JPEG', 8, 20, 35, 35);
           doc.save(`Carnet_Mascota_${mascota.nombre}.pdf`);
         };
       };
     };
+
 
     const obtenerRazaPorMascota = async (mascotaId) => {
       try {
