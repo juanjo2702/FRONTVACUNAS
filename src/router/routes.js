@@ -94,6 +94,18 @@ const routes = [
           }
         }
       },
+      {
+        path: '/PaginaCorrecciones',
+        component: () => import('src/pages/PaginaCorrecciones.vue'),
+        beforeEnter: (to, from, next) => {
+          const roleId = parseInt(localStorage.getItem('userRoleId'));
+          if (roleId === 3 || roleId === 2 || roleId === 1) {
+            next(); // Todos los roles tienen acceso
+          } else {
+            next('/login');
+          }
+        }
+      },
     ]
   },
   {

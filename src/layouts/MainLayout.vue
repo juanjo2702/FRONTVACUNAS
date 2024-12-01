@@ -78,6 +78,16 @@
           </q-item-section>
         </router-link>
 
+        <router-link to="/PaginaCorrecciones" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="search" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">CORRECCIONES</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
       </q-list>
       <div class="logout-container">
         <q-btn flat dense class="logout-btn" @click="logout" icon="exit_to_app" label="Cerrar Sesión" />

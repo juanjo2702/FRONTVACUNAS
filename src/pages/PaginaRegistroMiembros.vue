@@ -52,6 +52,48 @@
             </div>
           </q-form>
         </q-card-section>
+
+        <q-separator />
+
+        <q-card-section>
+          <div class="text-h6">Buscar Persona por CI</div>
+          <div class="row q-col-gutter-md q-mb-md">
+            <div class="col-xs-12 col-sm-8">
+              <q-input filled v-model="searchCI" label="Ingresar CI" clearable maxlength="20" />
+            </div>
+            <div class="col-xs-12 col-sm-4">
+              <q-btn label="Buscar" icon="search" color="primary" class="full-width" @click="searchPerson" />
+            </div>
+          </div>
+
+          <!-- Campo con el nombre de la persona encontrada -->
+          <q-input v-if="searchResult" v-model="selectedPersonLabel" label="Persona encontrada" filled class="q-my-md"
+            readonly @click="showAddButton = true" />
+
+          <q-btn v-if="showAddButton && selectedPerson" label="Agregar" color="positive" class="q-mt-sm"
+            @click="assignPerson" />
+
+
+          <!-- Mensaje si no hay resultados -->
+          <div v-else-if="!isSearching && searchCI && !searchResult">
+            <q-banner dense class="bg-grey-2 text-dark">
+              <q-icon name="warning" />
+              No se encontraron resultados para el CI ingresado.
+            </q-banner>
+          </div>
+
+          <!-- Spinner de carga -->
+          <q-spinner v-if="isSearching" size="lg" color="primary" />
+        </q-card-section>
+
+        <q-table :rows="participaciones" :columns="columns" row-key="id" flat bordered class="q-mt-md">
+          <template v-slot:body-cell-persona="props">
+            <!-- Mostrar nombre y apellido de la persona -->
+            {{ props.row.miembro.persona.nombres }} {{ props.row.miembro.persona.apellidos }}
+          </template>
+        </q-table>
+
+
       </div>
     </div>
   </q-page>
@@ -64,7 +106,20 @@ import $ from 'jquery'; // Para Dropify
 import Swal from 'sweetalert2';
 import 'dropify/dist/css/dropify.min.css';
 import 'dropify/dist/js/dropify.min.js';
+const brigadaUserId = Number(localStorage.getItem('brigadaUserId')); // Obtener el ID de la brigada logueada
 
+const fetchParticipaciones = async () => {
+  try {
+    const response = await api.get(`/participaciones/brigada/${brigadaUserId}`);
+    participaciones.value = response.data; // Guardar los datos
+  } catch (error) {
+    console.error('Error cargando participaciones:', error);
+    Swal.fire('Error', 'Hubo un problema al cargar las participaciones.', 'error');
+  }
+};
+
+// Llamar al cargar el componente
+onMounted(fetchParticipaciones);
 // Datos de la persona y el miembro
 const personaData = ref({
   nombres: '',
@@ -78,6 +133,22 @@ const miembroData = ref({
   fotoAnverso: null,
   fotoReverso: null
 });
+const columns = [
+  { name: 'id', label: 'ID', field: 'id', align: 'left' },
+  { name: 'persona', label: 'Nombre y Apellido', field: 'persona', align: 'left' },
+  { name: 'created_at', label: 'Fecha de Registro', field: 'created_at', align: 'left' },
+];
+
+// Estados para la búsqueda
+const searchCI = ref(''); // CI ingresado por el usuario
+const searchResult = ref(null); // Resultado de la búsqueda (persona encontrada)
+const selectedPerson = ref(null); // Persona seleccionada para futuras acciones
+const selectedPersonLabel = ref(''); // Texto que muestra el nombre de la persona encontrada
+const isSearching = ref(false); // Estado de carga mientras se busca
+const showAddButton = ref(false); // Estado para mostrar el botón "Agregar"
+const participaciones = ref([]); // Aquí se guardarán los datos de la tabla
+const showTable = ref(false); // Inicialmente, la tabla está oculta
+
 
 // Inicializar Dropify
 const initializeDropify = () => {
@@ -99,6 +170,99 @@ const resetForm = () => {
   $('#fotoAnverso').data('dropify').resetPreview();
   $('#fotoReverso').data('dropify').resetPreview();
 };
+
+const searchPerson = async () => {
+  if (!searchCI.value.trim()) {
+    Swal.fire('Atención', 'Debes ingresar un CI válido antes de buscar.', 'warning');
+    return;
+  }
+
+  try {
+    isSearching.value = true; // Mostrar el spinner de carga
+    const response = await api.get(`/personas`, { params: { ci: searchCI.value } });
+
+    // Guardar el resultado de la búsqueda
+    searchResult.value = response.data; // Resultado encontrado
+    selectedPerson.value = searchResult.value; // Guardar la persona seleccionada
+    selectedPersonLabel.value = `${searchResult.value.nombres} ${searchResult.value.apellidos}`; // Nombre completo
+    showAddButton.value = false; // Ocultar botón inicialmente
+  } catch (error) {
+    console.error('Error buscando persona:', error);
+    searchResult.value = null; // No hay resultados
+    selectedPerson.value = null;
+    selectedPersonLabel.value = ''; // Limpiar el campo
+    showAddButton.value = false; // Ocultar botón
+    Swal.fire('Error', 'No se encontró ninguna persona con ese CI.', 'error');
+  } finally {
+    isSearching.value = false; // Ocultar el spinner de carga
+  }
+};
+
+
+
+const assignPerson = async () => {
+  if (!selectedPerson.value) {
+    Swal.fire('Atención', 'No has seleccionado ninguna persona.', 'warning');
+    return;
+  }
+
+  try {
+    // Verificar si la persona está en la tabla miembros
+    const miembroResponse = await api.get(`/miembros`, {
+      params: { persona_id: selectedPerson.value.id },
+    });
+
+    const miembro = miembroResponse.data; // Datos del miembro encontrado (si existe)
+
+    if (miembro) {
+      // Registrar en la tabla participaciones
+      let brigadaUserId = localStorage.getItem('brigadaUserId');
+      brigadaUserId = Number(brigadaUserId); // Convertir a número
+
+      if (isNaN(brigadaUserId)) {
+        throw new Error('El ID de brigada no es válido.');
+      }
+
+      const participacionData = {
+        miembro_id: miembro.id, // ID del miembro
+        brigada_id: brigadaUserId, // ID de la brigada en sesión
+      };
+
+      await api.post(`/participacions`, participacionData);
+
+      // Recargar las participaciones
+      await fetchParticipaciones();
+
+      // Mostrar la tabla al agregar exitosamente
+      showTable.value = true;
+
+      Swal.fire(
+        'Éxito',
+        `Se ha registrado correctamente la participación para ${selectedPerson.value.nombres} ${selectedPerson.value.apellidos}.`,
+        'success'
+      );
+    } else {
+      // Si no existe en la tabla miembros, mostrar mensaje
+      Swal.fire(
+        'Atención',
+        'Esta persona no se encuentra registrada como miembro.',
+        'error'
+      );
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire('Error', 'Hubo un problema al procesar la solicitud.', 'error');
+  }
+};
+
+
+
+
+
+
+
+
+
 
 // Función para registrar Persona y Miembro
 const submitForm = async () => {
@@ -200,6 +364,7 @@ const submitForm = async () => {
 // Montar el componente y inicializar Dropify
 onMounted(() => {
   initializeDropify();
+  showTable.value = false; // Ocultar la tabla al iniciar
 });
 </script>
 

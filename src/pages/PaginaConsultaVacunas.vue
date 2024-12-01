@@ -78,7 +78,7 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { api } from 'src/boot/axios'; // Ruta al archivo axios.js
-
+import { parseISO } from 'date-fns';
 export default {
   components: {
     QPage, QInput, QBtn, QCard, QCardSection, QList, QItem, QItemSection, QItemLabel, QImg
@@ -168,17 +168,11 @@ export default {
       doc.setFontSize(16);
       doc.text('Carnet de Mascota', 55, 10, { align: 'center' });
 
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = imgSrc;
+      try {
+        // Obtén la URL de la imagen o usa un placeholder
+        const imgSrc = await obtenerImagen(mascota.fotoFrontal);
 
-      img.onload = async () => {
-        const imgSrc = await api.get(`/storage/${mascota.fotoFrontal}`, { responseType: 'blob' })
-          .then(response => URL.createObjectURL(response.data))
-          .catch(error => {
-            console.error("Error obteniendo la imagen:", error);
-            return '/storage/placeholder.png'; // Usa una imagen alternativa si falla
-          });
+        // Agrega la imagen al PDF
         doc.addImage(imgSrc, 'JPEG', 8, 20, 35, 35);
 
         // Información de la mascota
@@ -216,59 +210,54 @@ export default {
         doc.setFontSize(16);
         doc.text('Historial de Vacunas', 55, 10, { align: 'center' });
 
-        // Obtener historial de vacunas
-        try {
-          const response = await api.get(`/mascota/${mascota.id}/historial-vacunas`);
-          const historial = response.data;
+        const historial = await obtenerHistorialVacunas(mascota.id);
 
-          const motivoMap = {
-            1: 'Menor a 3 meses',
-            2: 'Gestación',
-            3: 'Enfermedad grave',
-            4: 'Ausente',
-          };
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
 
-          doc.setTextColor(0, 0, 0);
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(10);
+        let yPosition = 20;
+        historial.forEach((registro, index) => {
+          // Verificar si el registro tiene una fecha válida
+          if (!registro.fecha || isNaN(new Date(registro.fecha))) {
+            console.warn(`Registro ${index + 1} tiene una fecha inválida:`, registro.fecha);
+            return; // Salta este registro si la fecha es inválida
+          }
 
-          let yPosition = 20;
-          historial.forEach((registro, index) => {
-            // Ajustar la fecha (restar 5 horas)
-            const fechaVacunacion = new Date(registro.created_at);
-            fechaVacunacion.setHours(fechaVacunacion.getHours() - 5);
-            const fechaFormateada = fechaVacunacion.toISOString().split('T')[0];
+          // Procesar la fecha
+          const fechaVacunacion = new Date(registro.fecha);
+          fechaVacunacion.setHours(fechaVacunacion.getHours() - 5); // Ajusta el desfase horario
+          const fechaFormateada = fechaVacunacion.toISOString().split('T')[0];
 
-            doc.text(`${index + 1}. Estado: ${registro.estado === 1 ? 'Vacunado' : 'No Vacunado'}`, 8, yPosition);
-            doc.text(`Fecha vacunación: ${fechaFormateada}`, 8, yPosition + 4);
+          // Agregar información al PDF
+          doc.text(`${index + 1}. Estado: ${registro.estado === 1 ? 'Vacunado' : 'No Vacunado'}`, 8, yPosition);
+          doc.text(`Fecha vacunación: ${fechaFormateada}`, 8, yPosition + 4);
 
-            if (registro.motivo) {
-              // Solo agregar el motivo si existe
-              doc.text(`Motivo: ${motivoMap[registro.motivo] || ''}`, 8, yPosition + 8);
-              yPosition += 4; // Aumentar espacio si se agregó el motivo
-            }
+          if (registro.motivo) {
+            const motivoMap = {
+              1: 'Menor a 3 meses',
+              2: 'Gestación',
+              3: 'Enfermedad grave',
+              4: 'Ausente',
+            };
 
-            doc.text(`Campaña: ${registro.campania_nombre}`, 8, yPosition + 8);
-            yPosition += 16; // Espacio para el siguiente registro
-          });
-        } catch (error) {
-          console.error('Error obteniendo historial de vacunas:', error);
-          doc.setFont('helvetica', 'normal');
-          doc.text('No se pudo obtener el historial de vacunas.', 8, 20);
-        }
+            doc.text(`Motivo: ${motivoMap[registro.motivo] || 'No especificado'}`, 8, yPosition + 8);
+            yPosition += 4; // Aumenta espacio si se agregó un motivo
+          }
 
+          doc.text(`Campaña: ${registro.campania_nombre}`, 8, yPosition + 8);
+          yPosition += 16; // Espacio para el siguiente registro
+        });
+
+        // Guarda el PDF
         doc.save(`Carnet_Mascota_${mascota.nombre}.pdf`);
-      };
-
-      img.onerror = () => {
-        const placeholder = new Image();
-        placeholder.src = '/storage/placeholder.png';
-        placeholder.onload = () => {
-          doc.addImage(placeholder, 'JPEG', 8, 20, 35, 35);
-          doc.save(`Carnet_Mascota_${mascota.nombre}.pdf`);
-        };
-      };
+      } catch (error) {
+        console.error("Error generando el PDF:", error);
+        alert('No se pudo generar el PDF, inténtalo nuevamente.');
+      }
     };
+
+
 
 
     const obtenerRazaPorMascota = async (mascotaId) => {
@@ -281,6 +270,16 @@ export default {
         console.error("Error obteniendo la raza de la mascota:", error);
       }
     };
+    const obtenerImagen = async (ruta) => {
+      try {
+        const response = await api.get(`/storage/${ruta}`, { responseType: 'blob' });
+        return URL.createObjectURL(response.data); // Devuelve la URL para usarla en la imagen
+      } catch (error) {
+        console.error("Error obteniendo la imagen:", error);
+        return '/storage/placeholder.png'; // Imagen de respaldo en caso de error
+      }
+    };
+
 
     return {
       search,
@@ -291,7 +290,8 @@ export default {
       buscarPropietarios,
       seleccionarPropietario,
       mostrarMascotas,
-      descargarPDF
+      descargarPDF,
+      obtenerImagen
     };
   }
 };

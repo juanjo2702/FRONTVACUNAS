@@ -41,8 +41,11 @@
         </q-card-section>
         <q-card-section>
           <div>
-            <q-btn label="Registrar" type="submit" color="primary" @click="onSubmit" />
-            <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
+            <q-btn v-if="isEditing" label="Guardar Cambios" color="primary" @click="updateData" />
+            <q-btn v-else label="Registrar" color="primary" @click="onSubmit" />
+
+            <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" @click="onReset" />
+
           </div>
         </q-card-section>
       </q-card>
@@ -58,7 +61,15 @@
             </template>
           </q-input>
         </template>
+        <!-- Botones de editar/eliminar -->
+        <template v-slot:body-cell-acciones="props">
+          <q-td align="center">
+            <q-btn flat icon="edit" color="primary" @click="editPersona(props.row)" />
+            <q-btn flat icon="delete" color="negative" @click="changeEstadoPersona(props.row)" />
+          </q-td>
+        </template>
       </q-table>
+
     </q-page>
   </q-page>
 </template>
@@ -88,7 +99,8 @@ const columns = [
   { name: "ci", label: "CI", align: "left", field: "ci" },
   { name: "telefono", label: "Teléfono", align: "left", field: "telefono" },
   { name: "nombreUsuario", label: "Nombre de Usuario", align: "left", field: row => row.usuario?.nombre || 'N/A' },
-  { name: "password", label: "Password", align: "left", field: row => row.usuario?.password || 'N/A' }
+  { name: "password", label: "Password", align: "left", field: row => row.usuario?.password || 'N/A' },
+  { name: "acciones", label: "Acciones", align: "center" }
 ];
 
 const filteredPersonas = computed(() => {
@@ -168,21 +180,32 @@ const onSubmit = async () => {
 
 
 const onReset = () => {
+  // Reinicia los datos del formulario
   formData.value = {
     nombres: "",
     apellidos: "",
     ci: "",
     telefono: "",
     nombreUsuario: "",
-    password: ""
+    password: "",
   };
+
+  // Salir del modo edición
+  isEditing.value = false;
+
+  // Limpiar el ID del registro en edición
+  editingId.value = null;
+
+
 };
 
-// Obtener las personas que tienen usuario_id asociado
 const fetchPersonas = async () => {
   try {
     const response = await api.get("/personas?filter=withUsuario");
-    personas.value = response.data.filter((persona) => persona.usuario_id !== null); // Solo personas con usuario_id
+    // Filtrar las personas que tienen usuario_id y estado = 1
+    personas.value = response.data.filter(
+      (persona) => persona.usuario_id !== null && persona.estado === 1
+    );
   } catch (error) {
     $q.notify({
       color: "red-5",
@@ -194,9 +217,126 @@ const fetchPersonas = async () => {
   }
 };
 
+
 onMounted(() => {
   fetchPersonas();
 });
+
+
+const isEditing = ref(false); // Indica si estás editando
+const editingId = ref(null); // ID del registro en edición
+const updateUsuarioData = {
+  nombre: formData.value.nombreUsuario,
+};
+
+if (formData.value.password) {
+  updateUsuarioData.password = formData.value.password;
+}
+
+
+const editPersona = async (row) => {
+  try {
+    const response = await api.get(`/jefe-zona/${row.id}`); // Llama al endpoint correspondiente
+    const data = response.data;
+
+    // Asigna los datos obtenidos al formulario
+    formData.value = {
+      nombres: data.nombres,
+      apellidos: data.apellidos,
+      ci: data.ci,
+      telefono: data.telefono,
+      nombreUsuario: data.usuario?.nombre || '',
+      password: '', // No mostrar la contraseña en el formulario
+    };
+
+    isEditing.value = true; // Activa el modo edición
+    editingId.value = row.id; // Guarda el ID de la persona en edición
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: 'Error al cargar los datos para editar.',
+    });
+    console.error(error);
+  }
+};
+
+
+const updateData = async () => {
+  if (
+    !formData.value.nombres ||
+    !formData.value.apellidos ||
+    !formData.value.ci ||
+    !formData.value.telefono ||
+    !formData.value.nombreUsuario
+  ) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: "Por favor, complete los campos obligatorios.",
+    });
+    return;
+  }
+
+  try {
+    // Enviar datos de persona y usuario al backend
+    const payload = {
+      nombres: formData.value.nombres,
+      apellidos: formData.value.apellidos,
+      ci: formData.value.ci,
+      telefono: formData.value.telefono,
+      usuario: formData.value.nombreUsuario,
+      password: formData.value.password || undefined, // Enviar contraseña solo si fue proporcionada
+    };
+
+    await api.put(`/personas/${editingId.value}`, payload);
+
+    $q.notify({
+      color: "green-4",
+      textColor: "white",
+      icon: "cloud_done",
+      message: "Datos actualizados con éxito.",
+    });
+
+    fetchPersonas(); // Actualizar la lista
+    onReset(); // Salir del modo edición y limpiar el formulario
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: "Error al actualizar los datos.",
+    });
+    console.error("Error al actualizar los datos:", error);
+  }
+};
+const changeEstadoPersona = async (row) => {
+  try {
+    // Llama al endpoint para desactivar la persona
+    await api.patch(`/personas/${row.id}/desactivar`);
+
+    $q.notify({
+      color: "green-4",
+      textColor: "white",
+      icon: "cloud_done",
+      message: "Persona desactivada con éxito."
+    });
+
+    fetchPersonas(); // Actualiza la lista de personas
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: "Error al desactivar la persona."
+    });
+    console.error(error);
+  }
+};
+
+
 </script>
 
 

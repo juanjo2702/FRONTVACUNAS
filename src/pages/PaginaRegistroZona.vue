@@ -29,8 +29,11 @@
         </q-card-section>
         <q-card-section>
           <div>
-            <q-btn label="Registrar" type="submit" color="primary" @click="onSubmit" />
-            <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
+            <q-btn v-if="isEditing" label="Guardar Cambios" color="primary" @click="updateZona" />
+            <q-btn v-else label="Registrar" color="primary" @click="onSubmit" />
+
+            <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" @click="onReset" />
+
           </div>
         </q-card-section>
       </q-card>
@@ -53,6 +56,8 @@
         <template v-slot:body-cell-acciones="props">
           <q-td align="center">
             <q-btn dense flat round color="primary" icon="edit" @click="editRow(props.row)" />
+            <q-btn flat icon="delete" color="negative" @click="deleteZona(props.row)" />
+
           </q-td>
         </template>
       </q-table>
@@ -95,17 +100,18 @@ const filteredZonas = computed(() => {
 const fetchZonas = async () => {
   try {
     const response = await api.get("/zonas");
-    zonas.value = response.data;
+    zonas.value = response.data.filter((zona) => zona.estado === 1); // Filtrar solo las activas
   } catch (error) {
     $q.notify({
       color: "red-5",
       textColor: "white",
       icon: "error",
-      message: "Error al obtener la lista de zonas."
+      message: "Error al obtener la lista de zonas.",
     });
     console.error("Error al obtener zonas:", error);
   }
 };
+
 
 // Definir la estructura de datos para la zona
 const zonaData = ref({
@@ -161,19 +167,85 @@ const onSubmit = async () => {
   }
 };
 
-// Función para limpiar el formulario
 const onReset = () => {
   zonaData.value = {
     nombre: '',
     centro: '',
     ciudad: '',
-    departamento: ''
+    departamento: '',
   };
+  isEditing.value = false; // Asegurarse de salir del modo edición
 };
+
 
 onMounted(() => {
   fetchZonas();
 });
+
+
+
+const editRow = (row) => {
+  zonaData.value = { ...row }; // Cargar los datos de la fila seleccionada
+  isEditing.value = true; // Activar modo edición
+};
+
+const isEditing = ref(false); // Modo edición desactivado por defecto
+
+const updateZona = async () => {
+  if (!zonaData.value.nombre || !zonaData.value.centro || !zonaData.value.departamento) {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: 'Por favor, complete los campos obligatorios.',
+    });
+    return;
+  }
+
+  try {
+    await api.put(`/zonas/${zonaData.value.id}`, zonaData.value); // Realizar la solicitud de actualización
+    $q.notify({
+      color: 'green-4',
+      textColor: 'white',
+      icon: 'cloud_done',
+      message: 'Zona actualizada con éxito.',
+    });
+    fetchZonas(); // Actualizar la lista de zonas
+    onReset(); // Restablecer el formulario
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: 'Error al actualizar la zona.',
+    });
+    console.error('Error al actualizar zona:', error);
+  }
+};
+
+const deleteZona = async (row) => {
+  try {
+    await api.patch(`/zonas/${row.id}/desactivar`); // Cambiar el estado a inactivo
+    $q.notify({
+      color: "green-4",
+      textColor: "white",
+      icon: "cloud_done",
+      message: "Zona desactivada con éxito.",
+    });
+    fetchZonas(); // Actualizar la lista de zonas
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: "Error al desactivar la zona.",
+    });
+    console.error("Error al desactivar zona:", error);
+  }
+};
+
+
+
 </script>
 
 <style scoped>
