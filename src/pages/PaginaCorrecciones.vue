@@ -78,10 +78,6 @@
               <div class="row q-col-gutter-md">
                 <q-btn flat icon="edit" color="primary" @click="openEditMascotaModal(mascota)" label="Editar"
                   class="col" />
-
-                <!-- Botón de Eliminar -->
-                <q-btn flat icon="delete" color="negative" @click="eliminarMascota(mascota.id)" label="Eliminar"
-                  class="col" />
               </div>
             </div>
           </q-card-section>
@@ -120,15 +116,11 @@
                 <q-input filled v-model="propietarioData.observaciones" label="Observaciones" type="textarea" />
               </div>
 
-
               <div class="col-xs-12 col-sm-6 col-md-4">
                 <label for="foto">Subir Foto del Propietario</label>
                 <input type="file" class="dropify" id="foto" accept="image/*;capture=camera"
                   :data-default-file="propietarioData.foto ? `${customAxios.defaults.baseURL}/storage/images/propietarios/${propietarioData.foto}` : ''" />
               </div>
-
-
-
               <div class="col-xs-12 col-sm-6 col-md-4">
                 <q-input filled v-model="propietarioData.latitud" label="Latitud" lazy-rules />
               </div>
@@ -189,8 +181,6 @@
               <div class="col-xs-12 col-sm-6 col-md-4">
                 <q-select filled v-model="mascotaEditData.raza_id" :options="allRazas" option-value="id"
                   option-label="nombre" label="Raza" clearable />
-
-
               </div>
 
               <div class="col-xs-12 col-sm-6 col-md-4">
@@ -202,13 +192,8 @@
                   <q-input filled v-model="mascotaEditData.rangoEdad" label="Edad (0-20 años)" type="number"
                     :rules="[(val) => val !== null && val !== undefined && val >= 0 && val <= 20 || 'La edad debe estar entre 0 y 20 años']"
                     lazy-rules required min="0" max="20" />
-
-
                 </div>
-
               </div>
-
-
 
               <div class="col-xs-12 col-sm-6 col-md-4">
                 <q-input filled v-model="mascotaEditData.descripcion" label="Descripción" type="textarea" lazy-rules />
