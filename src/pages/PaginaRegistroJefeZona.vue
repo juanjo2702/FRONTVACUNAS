@@ -201,7 +201,7 @@ const onReset = () => {
 
 const fetchPersonas = async () => {
   try {
-    const response = await api.get("/personas?filter=withUsuario");
+    const response = await api.get("/personas/filter=withUsuario");
     // Filtrar las personas que tienen usuario_id y estado = 1
     personas.value = response.data.filter(
       (persona) => persona.usuario_id !== null && persona.estado === 1
@@ -335,8 +335,6 @@ const changeEstadoPersona = async (row) => {
     console.error(error);
   }
 };
-
-
 </script>
 
 
