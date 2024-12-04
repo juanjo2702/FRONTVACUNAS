@@ -508,7 +508,7 @@ const generatePDF = async (campania, zona, brigadasNuevas, brigadasCompletas) =>
   // Crear la tabla de brigadas (incluyendo contraseñas para nuevas brigadas)
   const tableBody = [
     ...brigadasNuevas.map((brigada, index) => [
-      brigadasCompletas.length + index + 1, // Continuar numeración
+      index + 1, // Continuar numeración
       brigada.nombre, // Nombre de usuario
       brigada.password, // Contraseña generada
     ]),
