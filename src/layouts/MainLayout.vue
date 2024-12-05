@@ -57,9 +57,8 @@
           </q-item-section>
         </router-link>
 
-        <router-link v-if="canAccess(['3', '2', '1'])" to="/PaginaRegistroMiembros"
-          exact-active-class="q-item-active-selected" class="q-item q-item-type row no-wrap custom-link"
-          style="text-decoration: none;">
+        <router-link v-if="canAccess(['1'])" to="/PaginaRegistroMiembros" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
           <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
             <div class="flex-row" style="display: flex; align-items: center;">
               <q-icon name="book" size="md" color="white" />

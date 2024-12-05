@@ -87,7 +87,7 @@
               <div id="map" class="q-mt-md" style="height: 300px; width: 100%"></div>
 
               <div class="q-pa-md row justify-evenly">
-                <q-btn label="Registrar" type="submit" color="primary" />
+                <q-btn label="Registrar" color="primary" @click="confirmAndSubmit" />
                 <q-btn label="Resetear" type="reset" color="green" />
               </div>
               <div class="q-pa-md row justify-evenly">
@@ -176,14 +176,13 @@
                 </div>
               </div>
 
-
-
               <div class="q-pa-md row justify-between">
                 <div class="q-pa-md row justify-center">
-                  <q-btn label="Guardar y seguir registrando" color="teal" @click="submitAndContinue" />
+                  <q-btn label="Guardar y seguir registrando" color="teal" @click="submitAndContinueWithConfirmation" />
                 </div>
                 <div class="q-pa-md row justify-center">
-                  <q-btn label="Registrar y finalizar" color="primary" @click="mostrarMascotasDirectamente" />
+                  <q-btn label="Registrar y finalizar" color="primary"
+                    @click="mostrarMascotasDirectamenteWithConfirmation" />
                 </div>
                 <div class="q-pa-md row justify-center">
                   <q-btn label="Cerrar" color="negative" @click="isModalMascotaOpen = false"
@@ -255,12 +254,6 @@
           </q-card-section>
         </q-card>
       </q-dialog>
-
-
-
-
-
-
     </div>
   </q-page>
 </template>
@@ -281,7 +274,6 @@ import 'dropify/dist/js/dropify.min.js';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';  // Importa useQuasar
 const router = useRouter();  // Crea una instancia del router
-
 // Función para registrar la mascota y cerrar el modal
 const submitAndClose = async () => {
 
@@ -895,6 +887,107 @@ const openModalVacunaDirectamente = async (row) => {
       position: 'top'
     });
   }
+};
+
+const confirmAndSubmit = () => {
+  $q.dialog({
+    title: '<span style="color: #4caf50;">Confirmación de Registro</span>',
+    message: `
+      <div style="display: flex; align-items: center; font-size: 16px;">
+        <q-icon name="person_add" color="green" style="margin-right: 8px;"></q-icon>
+        ¿Estás seguro de que los datos del propietario son correctos y deseas registrarlo?
+      </div>
+    `,
+    html: true, // Permite HTML en el mensaje
+    ok: {
+      label: 'Registrar',
+      color: 'green',
+      flat: false,
+    },
+    cancel: {
+      label: 'Cancelar',
+      color: 'negative',
+      flat: true,
+    },
+    persistent: true,
+  }).onOk(() => {
+    // Si acepta, proceder con el registro
+    submitFormPersona();
+  }).onCancel(() => {
+    // Si cancela, mostrar notificación
+    $q.notify({
+      type: 'warning',
+      message: 'Registro cancelado.',
+      position: 'top',
+    });
+  });
+};
+
+const submitAndContinueWithConfirmation = () => {
+  $q.dialog({
+    title: '<span style="color: #2c82c9;">Confirmación</span>',
+    message: `
+      <div style="display: flex; align-items: center; font-size: 16px;">
+        <q-icon name="help_outline" color="blue" style="margin-right: 8px;"></q-icon>
+        ¿Estás seguro de que deseas guardar esta mascota y registrar otra?
+      </div>
+    `,
+    html: true, // Permite HTML en el mensaje
+    ok: {
+      label: 'Sí, continuar',
+      color: 'primary',
+      flat: false,
+    },
+    cancel: {
+      label: 'Cancelar',
+      color: 'negative',
+      flat: true,
+    },
+    persistent: true,
+  }).onOk(() => {
+    // Acción al confirmar
+    submitAndContinue();
+  }).onCancel(() => {
+    // Notificación al cancelar
+    $q.notify({
+      type: 'warning',
+      message: 'Acción cancelada.',
+      position: 'top',
+    });
+  });
+};
+
+const mostrarMascotasDirectamenteWithConfirmation = () => {
+  $q.dialog({
+    title: '<span style="color: #ff9800;">Finalizar Registro</span>',
+    message: `
+      <div style="display: flex; align-items: center; font-size: 16px;">
+        <q-icon name="warning" color="orange" style="margin-right: 8px;"></q-icon>
+        ¿Estás seguro de que los datos son los correctos para finalizar el registro?
+      </div>
+    `,
+    html: true,
+    ok: {
+      label: 'Finalizar',
+      color: 'orange',
+      flat: false,
+    },
+    cancel: {
+      label: 'Cancelar',
+      color: 'negative',
+      flat: true,
+    },
+    persistent: true,
+  }).onOk(() => {
+    // Acción al confirmar
+    mostrarMascotasDirectamente();
+  }).onCancel(() => {
+    $q.notify({
+      type: 'warning',
+      message: 'Acción cancelada.',
+      position: 'top',
+    });
+  });
 };
 
 </script>
