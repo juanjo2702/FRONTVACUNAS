@@ -74,6 +74,7 @@
           <!-- Botón para agregar si es miembro -->
           <q-btn v-if="selectedPerson && isMember" label="Agregar a Participaciones" color="positive" class="q-mt-sm"
             @click="assignPerson" />
+
           <!-- Mensaje si no hay resultados -->
           <div v-if="!isSearching && searchCI && !selectedPerson">
             <q-banner dense class="bg-grey-2 text-dark">
@@ -189,19 +190,42 @@ const resetForm = () => {
 };
 
 const searchPerson = async () => {
-  console.log("CI ingresado:", searchCI.value); // Verifica el CI ingresado
-
   try {
     const response = await api.post('/personas/buscar-por-ci', { ci: searchCI.value });
-    console.log("Persona encontrada:", response.data); // Imprime el resultado del backend
+
+    if (response.data) {
+      selectedPerson.value = response.data;
+      selectedPersonLabel.value = `${response.data.nombres} ${response.data.apellidos}`;
+
+      // Verificar si es miembro
+      try {
+        const miembroResponse = await api.get(`/miembros`, {
+          params: { persona_id: response.data.id },
+        });
+
+        isMember.value = !!miembroResponse.data; // Es miembro si la respuesta contiene datos
+      } catch (memberError) {
+        console.warn("La persona no es miembro:", memberError.response?.data || memberError.message);
+        isMember.value = false;
+      }
+    } else {
+      selectedPerson.value = null;
+      selectedPersonLabel.value = "";
+      isMember.value = false;
+    }
   } catch (error) {
     console.error("Error buscando persona:", error.response?.data || error.message);
+
+    selectedPerson.value = null;
+    selectedPersonLabel.value = "";
+    isMember.value = false;
+
     Swal.fire("Error", error.response?.data?.error || "Error al buscar persona", "error");
   }
 };
 
 
-// Registrar participación
+
 const assignPerson = async () => {
   if (!selectedPerson.value || !isMember.value) {
     Swal.fire("Atención", "No se puede registrar. La persona no pertenece a miembros.", "warning");
@@ -209,26 +233,43 @@ const assignPerson = async () => {
   }
 
   try {
+    // Obtener el miembro asociado a la persona
     const miembroResponse = await api.get(`/miembros`, {
-      params: { persona_id: selectedPerson.value.id },
+      params: { persona_id: selectedPerson.value.id }, // Obtener miembro por persona_id
     });
 
     const miembro = miembroResponse.data;
 
+    if (!miembro || !miembro.id) {
+      throw new Error("No se pudo obtener el miembro asociado a la persona seleccionada.");
+    }
+
+    // Construir los datos para la participación
     const participacionData = {
-      miembro_id: miembro.id,
-      brigada_id: brigadaUserId,
+      miembro_id: miembro.id, // Usar el ID del miembro obtenido
+      brigada_id: brigadaUserId, // ID de la brigada
     };
 
-    await api.post(`/participacions`, participacionData);
+    console.log("Registrando participación con datos:", participacionData);
+
+    // Enviar solicitud al backend
+    const response = await api.post(`/participacions`, participacionData);
+
+    console.log("Participación registrada con éxito:", response.data);
+
+    // Actualizar la lista de participaciones
     await fetchParticipaciones();
 
+    // Mostrar mensaje de éxito
     Swal.fire("Éxito", "Se ha registrado correctamente la participación.", "success");
   } catch (error) {
-    console.error("Error registrando participación:", error);
+    console.error("Error registrando participación:", error.response?.data || error.message);
     Swal.fire("Error", "Hubo un problema al registrar la participación.", "error");
   }
 };
+
+
+
 
 const searchAndRegisterParticipation = async () => {
   try {
