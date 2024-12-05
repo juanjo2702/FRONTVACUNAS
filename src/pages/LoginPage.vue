@@ -95,13 +95,19 @@ export default {
       try {
         // Hacer login
         const response = await api.post('/login', loginData);
+        console.log(response.data); // Verificar el contenido de la respuesta del login
 
         if (response.data.success) {
           const userId = response.data.user.id;
+          const roleId = response.data.user?.rol_id; // Cambié `role_id` por `rol_id` según la estructura de la respuesta de Postman
+          // Obtiene el role_id del usuario autenticado
+          console.log("Role ID obtenido:", roleId);
 
-          // Guardar token y nombre de usuario
+
+          // Guardar token, nombre de usuario y role_id
           localStorage.setItem('authToken', response.data.token);
           localStorage.setItem('userName', nombre.value);
+          localStorage.setItem('userRoleId', roleId);
 
           // Verificar si el usuario está en la tabla 'brigadas' usando el usuario_id
           const brigadaResponse = await api.get(`/brigadas/usuario/${userId}`);
@@ -113,8 +119,27 @@ export default {
           } else {
             console.log('Usuario no está en brigadas');
           }
+
           console.log("Login exitoso, redirigiendo...");
-          router.push('/');
+
+          // Redirigir según el role_id del usuario
+          switch (parseInt(roleId)) {
+            case 3: // Administrador
+              router.push('/PaginaRegistroZona'); // Página para administrador
+              break;
+            case 2: // Jefe de Zona
+              router.push('/PaginaRegistroJefeZona'); // Página para jefe de zona
+              break;
+            case 1: // Brigada
+              router.push('/PaginaConsultaVacunas'); // Página para brigada
+              break;
+            default:
+              $q.notify({
+                type: 'negative',
+                message: 'Rol desconocido, no se puede redirigir'
+              });
+          }
+
         } else {
           $q.notify({
             type: 'negative',

@@ -56,8 +56,6 @@
         <template v-slot:body-cell-acciones="props">
           <q-td align="center">
             <q-btn dense flat round color="primary" icon="edit" @click="editRow(props.row)" />
-            <q-btn flat icon="delete" color="negative" @click="deleteZona(props.row)" />
-
           </q-td>
         </template>
       </q-table>
@@ -80,7 +78,7 @@ const columns = [
   { name: "centro", label: "Centro", align: "left", field: "centro" },
   { name: "ciudad", label: "Ciudad", align: "left", field: "ciudad" },
   { name: "departamento", label: "Departamento", align: "left", field: "departamento" },
-  { name: "acciones", label: "Acciones", align: "center" }
+  { name: "acciones", label: "Editar", align: "center" }
 ];
 
 // Filtrado de zonas según la búsqueda
@@ -100,7 +98,7 @@ const filteredZonas = computed(() => {
 const fetchZonas = async () => {
   try {
     const response = await api.get("/zonas");
-    zonas.value = response.data.filter((zona) => zona.estado === 1); // Filtrar solo las activas
+    zonas.value = response.data;
   } catch (error) {
     $q.notify({
       color: "red-5",
@@ -222,29 +220,6 @@ const updateZona = async () => {
     console.error('Error al actualizar zona:', error);
   }
 };
-
-const deleteZona = async (row) => {
-  try {
-    await api.patch(`/zonas/${row.id}/desactivar`); // Cambiar el estado a inactivo
-    $q.notify({
-      color: "green-4",
-      textColor: "white",
-      icon: "cloud_done",
-      message: "Zona desactivada con éxito.",
-    });
-    fetchZonas(); // Actualizar la lista de zonas
-  } catch (error) {
-    $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: "Error al desactivar la zona.",
-    });
-    console.error("Error al desactivar zona:", error);
-  }
-};
-
-
 
 </script>
 

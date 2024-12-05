@@ -38,15 +38,6 @@
             <q-btn flat icon="vaccines" color="blue" @click="openModalVacunaDirectamente(props.row)" />
           </q-td>
         </template>
-
-
-        <!-- Botones de editar/eliminar -->
-        <template v-slot:body-cell-acciones="props">
-          <q-td align="center">
-            <q-btn flat icon="edit" color="primary" @click="editPersona(props.row)" />
-            <q-btn flat icon="delete" color="negative" @click="deletePersona(props.row)" />
-          </q-td>
-        </template>
       </q-table>
 
       <!-- Modal con el formulario de registro de Persona -->
@@ -311,7 +302,6 @@ const columns = [
   { name: 'foto', label: 'Foto', field: 'foto', align: 'center', format: val => val || 'Sin imagen' },  // Foto por defecto si está vacía
   { name: 'registro', label: 'Registrar Mascota', field: 'registro', align: 'center', sortable: false },
   { name: 'vacuna', label: 'Registrar Vacuna', field: 'vacuna', align: 'center', sortable: false }, // Nueva columna
-  { name: 'acciones', label: 'Acciones', align: 'center' }
 ];
 
 const filteredPersonas = computed(() => {

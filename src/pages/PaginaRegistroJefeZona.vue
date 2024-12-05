@@ -29,12 +29,11 @@
               </div>
               <div class="col-xs-12 col-sm-4">
                 <q-input filled v-model="formData.nombreUsuario" label="Nombre de usuario *" hint="Usuario" lazy-rules
-                  :rules="[(val) => !!val || 'El nombre de usuario es obligatorio']" class="input-spacing"
-                  style="text-transform: uppercase;" />
+                  :rules="[(val) => !!val || 'El nombre de usuario es obligatorio']" class="input-spacing" />
               </div>
               <div class="col-xs-12 col-sm-4">
-                <q-input filled v-model="formData.password" label="Password *" hint="Password" type="password"
-                  lazy-rules :rules="[(val) => !!val || 'La contraseña es obligatoria']" class="input-spacing" />
+                <q-input filled v-model="formData.password" label="Password *" lazy-rules
+                  :rules="[(val) => !!val || 'La contraseña es obligatoria']" class="input-spacing" />
               </div>
             </div>
           </q-form>
@@ -65,7 +64,6 @@
         <template v-slot:body-cell-acciones="props">
           <q-td align="center">
             <q-btn flat icon="edit" color="primary" @click="editPersona(props.row)" />
-            <q-btn flat icon="delete" color="negative" @click="changeEstadoPersona(props.row)" />
           </q-td>
         </template>
       </q-table>
@@ -84,13 +82,10 @@ const personas = ref([]);
 const search = ref("");
 const loading = ref(false);
 
-// Definir el rol predeterminado que será enviado (en este caso JefeZona)
-const rolId = ref(null);
+const rolId = ref(2);
 
-// Configuración para que todos reciban el rol de JEFEZONA
-// Suponiendo que el ID del rol JEFEZONA en la base de datos es 2. Cambia según sea necesario.
 onMounted(() => {
-  rolId.value = 2; // ID del rol JEFEZONA
+  fetchPersonas();
 });
 
 const columns = [
@@ -99,7 +94,6 @@ const columns = [
   { name: "ci", label: "CI", align: "left", field: "ci" },
   { name: "telefono", label: "Teléfono", align: "left", field: "telefono" },
   { name: "nombreUsuario", label: "Nombre de Usuario", align: "left", field: row => row.usuario?.nombre || 'N/A' },
-  { name: "password", label: "Password", align: "left", field: row => row.usuario?.password || 'N/A' },
   { name: "acciones", label: "Acciones", align: "center" }
 ];
 
@@ -127,54 +121,59 @@ const formData = ref({
 const onSubmit = async () => {
   if (!formData.value.nombres || !formData.value.apellidos || !formData.value.ci || !formData.value.telefono || !formData.value.nombreUsuario || !formData.value.password) {
     $q.notify({
-      color: 'red-5',
-      textColor: 'white',
-      icon: 'error',
-      message: 'Complete todos los campos obligatorios'
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: "Complete todos los campos obligatorios"
     });
     return;
   }
 
+  // Construir payload para usuario
+  const payloadUsuario = {
+    nombre: formData.value.nombreUsuario,
+    password: formData.value.password,
+    estado: 1,
+    rol_id: rolId.value, // rolId ya inicializado en el código
+  };
+
+  console.log("Datos enviados al servidor:", payloadUsuario);
+
   try {
-    // Registro del usuario con el rol específico (JEFEZONA en este caso)
-    const usuarioResponse = await api.post("/usuarios", {
-      nombre: formData.value.nombreUsuario,
-      password: formData.value.password,
-      estado: 1, // Estado automático
-      rol_id: rolId.value
-    });
+    // Crear usuario
+    const usuarioResponse = await api.post('/usuarios', payloadUsuario);
+    const usuarioId = usuarioResponse.data.id; // Captura el ID del usuario creado
 
-    // Asegúrate de que la respuesta contiene el `id`
-    const usuarioId = usuarioResponse.data.id;
-    console.log("Usuario ID generado:", usuarioId); // Debe mostrar el ID generado
+    console.log("Usuario creado con ID:", usuarioId);
 
-    // Registro de la persona con el ID del usuario creado
-    await api.post("/personas", {
+    // Crear persona vinculada al usuario
+    const payloadPersona = {
       nombres: formData.value.nombres,
       apellidos: formData.value.apellidos,
       ci: formData.value.ci,
       telefono: formData.value.telefono,
-      usuario_id: usuarioId // Aquí enlazamos el usuario recién creado
-    });
+      usuario_id: usuarioId, // Relación con usuario creado
+    };
+
+    await api.post("/personas", payloadPersona);
 
     $q.notify({
       color: "green-4",
       textColor: "white",
       icon: "cloud_done",
-      message: "Persona y Usuario registrados con éxito."
+      message: "Persona y Usuario registrados con éxito.",
     });
 
-    // Limpiar el formulario
     onReset();
-    fetchPersonas(); // Actualizar la lista de personas
+    fetchPersonas(); // Actualizar lista de personas
   } catch (error) {
+    console.error("Error al registrar:", error.response?.data || error.message);
     $q.notify({
       color: "red-5",
       textColor: "white",
       icon: "error",
-      message: "Error al registrar. Intente nuevamente."
+      message: "Error al registrar. Intente nuevamente.",
     });
-    console.error(error);
   }
 };
 
@@ -199,12 +198,22 @@ const onReset = () => {
 
 };
 
+const fetchUsuarios = async () => {
+  try {
+    const response = await api.get("/usuarios");
+    console.log("Usuarios obtenidos:", response.data);
+    // Puedes manejar la lista de usuarios aquí si es necesario
+  } catch (error) {
+    console.error("Error al obtener usuarios:", error.response?.data || error.message);
+  }
+};
+
+
 const fetchPersonas = async () => {
   try {
     const response = await api.get("/personas?filter=withUsuario");
-    // Filtrar las personas que tienen usuario_id y estado = 1
     personas.value = response.data.filter(
-      (persona) => persona.usuario_id !== null && persona.estado === 1
+      (persona) => persona.usuario?.rol_id === 2 // Filtra solo personas con rol_id = 2
     );
   } catch (error) {
     $q.notify({
@@ -220,6 +229,7 @@ const fetchPersonas = async () => {
 
 onMounted(() => {
   fetchPersonas();
+  fetchUsuarios();
 });
 
 
@@ -245,8 +255,8 @@ const editPersona = async (row) => {
       apellidos: data.apellidos,
       ci: data.ci,
       telefono: data.telefono,
-      nombreUsuario: data.usuario?.nombre || '',
-      password: '', // No mostrar la contraseña en el formulario
+      nombreUsuario: data.usuario?.nombre || "", // Completar con el nombre de usuario actual
+      password: "" // El campo de contraseña se queda vacío por seguridad
     };
 
     isEditing.value = true; // Activa el modo edición
@@ -281,17 +291,19 @@ const updateData = async () => {
   }
 
   try {
-    // Enviar datos de persona y usuario al backend
+    // Construir el payload para actualizar
     const payload = {
       nombres: formData.value.nombres,
       apellidos: formData.value.apellidos,
       ci: formData.value.ci,
       telefono: formData.value.telefono,
-      usuario: formData.value.nombreUsuario,
-      password: formData.value.password || undefined, // Enviar contraseña solo si fue proporcionada
+      usuario: {
+        nombre: formData.value.nombreUsuario,
+        ...(formData.value.password ? { password: formData.value.password } : {}) // Solo enviar la contraseña si fue ingresada
+      }
     };
 
-    await api.put(`/personas/${editingId.value}`, payload);
+    await api.put(`/jefe-zona/${editingId.value}/update`, payload);
 
     $q.notify({
       color: "green-4",
@@ -312,33 +324,7 @@ const updateData = async () => {
     console.error("Error al actualizar los datos:", error);
   }
 };
-const changeEstadoPersona = async (row) => {
-  try {
-    // Llama al endpoint para desactivar la persona
-    await api.patch(`/personas/${row.id}/desactivar`);
-
-    $q.notify({
-      color: "green-4",
-      textColor: "white",
-      icon: "cloud_done",
-      message: "Persona desactivada con éxito."
-    });
-
-    fetchPersonas(); // Actualiza la lista de personas
-  } catch (error) {
-    $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: "Error al desactivar la persona."
-    });
-    console.error(error);
-  }
-};
-
-
 </script>
-
 
 <style scoped>
 .formulario {

@@ -55,6 +55,7 @@
 
         <q-separator />
 
+        <!-- Buscar Persona por CI -->
         <q-card-section>
           <div class="text-h6">Buscar Persona por CI</div>
           <div class="row q-col-gutter-md q-mb-md">
@@ -67,18 +68,25 @@
           </div>
 
           <!-- Campo con el nombre de la persona encontrada -->
-          <q-input v-if="searchResult" v-model="selectedPersonLabel" label="Persona encontrada" filled class="q-my-md"
-            readonly @click="showAddButton = true" />
+          <q-input v-if="selectedPerson" v-model="selectedPersonLabel" label="Persona encontrada" filled class="q-my-md"
+            readonly />
 
-          <q-btn v-if="showAddButton && selectedPerson" label="Agregar" color="positive" class="q-mt-sm"
+          <!-- Botón para agregar si es miembro -->
+          <q-btn v-if="selectedPerson && isMember" label="Agregar a Participaciones" color="positive" class="q-mt-sm"
             @click="assignPerson" />
-
-
           <!-- Mensaje si no hay resultados -->
-          <div v-else-if="!isSearching && searchCI && !searchResult">
+          <div v-if="!isSearching && searchCI && !selectedPerson">
             <q-banner dense class="bg-grey-2 text-dark">
               <q-icon name="warning" />
               No se encontraron resultados para el CI ingresado.
+            </q-banner>
+          </div>
+
+          <!-- Mensaje si la persona no pertenece a miembros -->
+          <div v-if="selectedPerson && !isMember">
+            <q-banner dense class="bg-warning text-dark">
+              <q-icon name="error" />
+              Esta persona no pertenece a la categoría de miembros.
             </q-banner>
           </div>
 
@@ -86,14 +94,20 @@
           <q-spinner v-if="isSearching" size="lg" color="primary" />
         </q-card-section>
 
-        <q-table :rows="participaciones" :columns="columns" row-key="id" flat bordered class="q-mt-md">
-          <template v-slot:body-cell-persona="props">
-            <!-- Mostrar nombre y apellido de la persona -->
-            {{ props.row.miembro.persona.nombres }} {{ props.row.miembro.persona.apellidos }}
+        <q-table :rows="participaciones" :columns="columns" row-key="id" flat bordered>
+          <template v-slot:body-cell-nombres="props">
+            <q-td>{{ props.row.miembro.persona.nombres }}</q-td>
+          </template>
+          <template v-slot:body-cell-apellidos="props">
+            <q-td>{{ props.row.miembro.persona.apellidos }}</q-td>
+          </template>
+          <template v-slot:body-cell-ci="props">
+            <q-td>{{ props.row.miembro.persona.ci }}</q-td>
+          </template>
+          <template v-slot:body-cell-telefono="props">
+            <q-td>{{ props.row.miembro.persona.telefono }}</q-td>
           </template>
         </q-table>
-
-
       </div>
     </div>
   </q-page>
@@ -108,18 +122,6 @@ import 'dropify/dist/css/dropify.min.css';
 import 'dropify/dist/js/dropify.min.js';
 const brigadaUserId = Number(localStorage.getItem('brigadaUserId')); // Obtener el ID de la brigada logueada
 
-const fetchParticipaciones = async () => {
-  try {
-    const response = await api.get(`/participaciones/brigada/${brigadaUserId}`);
-    participaciones.value = response.data; // Guardar los datos
-  } catch (error) {
-    console.error('Error cargando participaciones:', error);
-    Swal.fire('Error', 'Hubo un problema al cargar las participaciones.', 'error');
-  }
-};
-
-// Llamar al cargar el componente
-onMounted(fetchParticipaciones);
 // Datos de la persona y el miembro
 const personaData = ref({
   nombres: '',
@@ -133,23 +135,38 @@ const miembroData = ref({
   fotoAnverso: null,
   fotoReverso: null
 });
-const columns = [
-  { name: 'id', label: 'ID', field: 'id', align: 'left' },
-  { name: 'persona', label: 'Nombre y Apellido', field: 'persona', align: 'left' },
-  { name: 'created_at', label: 'Fecha de Registro', field: 'created_at', align: 'left' },
-];
 
+const columns = [
+  { name: "id", label: "ID", align: "left", field: "id" },
+  { name: "nombres", label: "Nombres", align: "left", field: row => row.miembro?.persona?.nombres || "" },
+  { name: "apellidos", label: "Apellidos", align: "left", field: row => row.miembro?.persona?.apellidos || "" },
+  { name: "ci", label: "CI", align: "left", field: row => row.miembro?.persona?.ci || "" },
+  { name: "telefono", label: "Teléfono", align: "left", field: row => row.miembro?.persona?.telefono || "" },
+];
 // Estados para la búsqueda
 const searchCI = ref(''); // CI ingresado por el usuario
 const searchResult = ref(null); // Resultado de la búsqueda (persona encontrada)
 const selectedPerson = ref(null); // Persona seleccionada para futuras acciones
-const selectedPersonLabel = ref(''); // Texto que muestra el nombre de la persona encontrada
-const isSearching = ref(false); // Estado de carga mientras se busca
+const selectedPersonLabel = ref(""); // Nombre completo de la persona
 const showAddButton = ref(false); // Estado para mostrar el botón "Agregar"
-const participaciones = ref([]); // Aquí se guardarán los datos de la tabla
 const showTable = ref(false); // Inicialmente, la tabla está oculta
+const isMember = ref(false); // Indica si la persona pertenece a miembros
+const isSearching = ref(false); // Estado de carga
+const participaciones = ref([]); // Lista de participaciones
 
-
+const fetchParticipaciones = async () => {
+  try {
+    const response = await api.get(`/participaciones/brigada/${brigadaUserId}`);
+    participaciones.value = response.data.map(item => ({
+      ...item,
+      miembro: item.miembro || { persona: { nombres: "", apellidos: "", ci: "", telefono: "" } }, // Asegura que todos los datos existen
+    }));
+    console.log("Datos de participaciones procesados:", participaciones.value);
+  } catch (error) {
+    console.error("Error cargando participaciones:", error);
+    Swal.fire("Error", "Hubo un problema al cargar las participaciones.", "error");
+  }
+};
 // Inicializar Dropify
 const initializeDropify = () => {
   setTimeout(() => {
@@ -172,97 +189,75 @@ const resetForm = () => {
 };
 
 const searchPerson = async () => {
-  if (!searchCI.value.trim()) {
-    Swal.fire('Atención', 'Debes ingresar un CI válido antes de buscar.', 'warning');
-    return;
-  }
+  console.log("CI ingresado:", searchCI.value); // Verifica el CI ingresado
 
   try {
-    isSearching.value = true; // Mostrar el spinner de carga
-    const response = await api.get(`/personas`, { params: { ci: searchCI.value } });
-
-    // Guardar el resultado de la búsqueda
-    searchResult.value = response.data; // Resultado encontrado
-    selectedPerson.value = searchResult.value; // Guardar la persona seleccionada
-    selectedPersonLabel.value = `${searchResult.value.nombres} ${searchResult.value.apellidos}`; // Nombre completo
-    showAddButton.value = false; // Ocultar botón inicialmente
+    const response = await api.post('/personas/buscar-por-ci', { ci: searchCI.value });
+    console.log("Persona encontrada:", response.data); // Imprime el resultado del backend
   } catch (error) {
-    console.error('Error buscando persona:', error);
-    searchResult.value = null; // No hay resultados
-    selectedPerson.value = null;
-    selectedPersonLabel.value = ''; // Limpiar el campo
-    showAddButton.value = false; // Ocultar botón
-    Swal.fire('Error', 'No se encontró ninguna persona con ese CI.', 'error');
-  } finally {
-    isSearching.value = false; // Ocultar el spinner de carga
+    console.error("Error buscando persona:", error.response?.data || error.message);
+    Swal.fire("Error", error.response?.data?.error || "Error al buscar persona", "error");
   }
 };
 
 
-
+// Registrar participación
 const assignPerson = async () => {
-  if (!selectedPerson.value) {
-    Swal.fire('Atención', 'No has seleccionado ninguna persona.', 'warning');
+  if (!selectedPerson.value || !isMember.value) {
+    Swal.fire("Atención", "No se puede registrar. La persona no pertenece a miembros.", "warning");
     return;
   }
 
   try {
-    // Verificar si la persona está en la tabla miembros
     const miembroResponse = await api.get(`/miembros`, {
       params: { persona_id: selectedPerson.value.id },
     });
 
-    const miembro = miembroResponse.data; // Datos del miembro encontrado (si existe)
+    const miembro = miembroResponse.data;
 
-    if (miembro) {
-      // Registrar en la tabla participaciones
-      let brigadaUserId = localStorage.getItem('brigadaUserId');
-      brigadaUserId = Number(brigadaUserId); // Convertir a número
+    const participacionData = {
+      miembro_id: miembro.id,
+      brigada_id: brigadaUserId,
+    };
 
-      if (isNaN(brigadaUserId)) {
-        throw new Error('El ID de brigada no es válido.');
-      }
+    await api.post(`/participacions`, participacionData);
+    await fetchParticipaciones();
 
-      const participacionData = {
-        miembro_id: miembro.id, // ID del miembro
-        brigada_id: brigadaUserId, // ID de la brigada en sesión
-      };
-
-      await api.post(`/participacions`, participacionData);
-
-      // Recargar las participaciones
-      await fetchParticipaciones();
-
-      // Mostrar la tabla al agregar exitosamente
-      showTable.value = true;
-
-      Swal.fire(
-        'Éxito',
-        `Se ha registrado correctamente la participación para ${selectedPerson.value.nombres} ${selectedPerson.value.apellidos}.`,
-        'success'
-      );
-    } else {
-      // Si no existe en la tabla miembros, mostrar mensaje
-      Swal.fire(
-        'Atención',
-        'Esta persona no se encuentra registrada como miembro.',
-        'error'
-      );
-    }
+    Swal.fire("Éxito", "Se ha registrado correctamente la participación.", "success");
   } catch (error) {
-    console.error('Error:', error);
-    Swal.fire('Error', 'Hubo un problema al procesar la solicitud.', 'error');
+    console.error("Error registrando participación:", error);
+    Swal.fire("Error", "Hubo un problema al registrar la participación.", "error");
   }
 };
 
+const searchAndRegisterParticipation = async () => {
+  try {
+    // Paso 1: Buscar persona por CI
+    const response = await api.get('/personas/buscar-por-ci', { params: { ci: searchCI.value } });
+    const persona = response.data;
 
+    // Paso 2: Verificar si es miembro
+    const miembroResponse = await api.get('/miembros', { params: { persona_id: persona.id } });
+    const miembro = miembroResponse.data;
 
+    if (!miembro) {
+      Swal.fire("Error", "Esta persona no está registrada como miembro.", "warning");
+      return;
+    }
 
+    // Paso 3: Registrar participación
+    const participacionResponse = await api.post('/participaciones/registrar', {
+      miembro_id: miembro.id,
+      brigada_id: brigadaUserId, // ID de la brigada
+    });
 
-
-
-
-
+    Swal.fire("Éxito", "Participación registrada con éxito.", "success");
+    console.log("Participación:", participacionResponse.data);
+  } catch (error) {
+    console.error("Error:", error);
+    Swal.fire("Error", "Hubo un problema con el registro.", "error");
+  }
+};
 
 // Función para registrar Persona y Miembro
 const submitForm = async () => {
@@ -345,7 +340,7 @@ const submitForm = async () => {
     console.log('Datos de participación a enviar:', participacionData);
 
     const participacionResponse = await api.post('/participacions', participacionData);
-
+    await fetchParticipaciones();
     console.log("Participación registrada con éxito:", participacionResponse.data);
 
     // Mostrar mensaje de éxito
@@ -364,7 +359,8 @@ const submitForm = async () => {
 // Montar el componente y inicializar Dropify
 onMounted(() => {
   initializeDropify();
-  showTable.value = false; // Ocultar la tabla al iniciar
+  showTable.value = false;
+  fetchParticipaciones(); // Ocultar la tabla al iniciar
 });
 </script>
 
@@ -380,5 +376,11 @@ onMounted(() => {
   border-radius: 5px;
   background: #f9f9f9;
   text-align: center;
+}
+
+.q-table .q-td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

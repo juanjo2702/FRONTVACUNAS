@@ -28,8 +28,10 @@ export default route(function (/* { store, ssrContext } */) {
 
   // Guard global para manejar la autenticación y permisos
   Router.beforeEach((to, from, next) => {
-    // Redirigir al login si no está autenticado y no va a la página de login
-    if (!isAuthenticated() && to.path !== '/login') {
+    // Excepción para la ruta /PreRegistro
+    if (to.path === '/PreRegistro') {
+      next(); // Permitir el acceso sin autenticación
+    } else if (!isAuthenticated() && to.path !== '/login') {
       next('/login');
     } else if (to.meta.permiso && !hasPermission(to.meta.permiso)) {
       next('/PaginaNoAcceso');
