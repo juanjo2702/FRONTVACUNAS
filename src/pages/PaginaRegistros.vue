@@ -3,6 +3,51 @@
     <div class="q-pa-md">
       <!-- Botón para abrir el modal -->
       <q-btn label="Registrar Nueva Persona" color="primary" @click="openModalPersona" />
+      <div style="margin-top: 20px;"></div>
+
+      <div class="q-my-md row">
+        <div class="col">
+          <q-input v-model="search" label="Buscar..." outlined>
+            <template v-slot:append>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </div>
+      </div>
+      <q-table :rows="filteredPersonas" :columns="columns" row-key="id">
+        <template v-slot:body-cell-foto="props">
+          <q-td align="center">
+            <span v-if="props.row && props.row.foto">
+              <img :src="getStorageUrl(props.row.foto)" alt="Foto del Propietario" style="max-height: 100px;" />
+            </span>
+            <span v-else>No image available</span>
+          </q-td>
+        </template>
+
+
+        <!-- Botón de registrar mascota -->
+        <template v-slot:body-cell-registro="props">
+          <q-td align="center">
+            <q-btn flat icon="pets" color="teal" @click="openModalMascotas(props.row)" />
+          </q-td>
+        </template>
+
+        <!-- Botón de registrar vacuna -->
+        <template v-slot:body-cell-vacuna="props">
+          <q-td align="center">
+            <q-btn flat icon="vaccines" color="blue" @click="openModalVacunaDirectamente(props.row)" />
+          </q-td>
+        </template>
+
+
+        <!-- Botones de editar/eliminar -->
+        <template v-slot:body-cell-acciones="props">
+          <q-td align="center">
+            <q-btn flat icon="edit" color="primary" @click="editPersona(props.row)" />
+            <q-btn flat icon="delete" color="negative" @click="deletePersona(props.row)" />
+          </q-td>
+        </template>
+      </q-table>
 
       <!-- Modal con el formulario de registro de Persona -->
       <q-dialog v-model="isModalPersonaOpen" persistent>
@@ -13,7 +58,6 @@
           <q-separator></q-separator>
           <q-card-section>
             <q-form ref="form" @submit.prevent="submitFormPersona">
-              <!-- Sección de Datos de Persona -->
               <div class="row q-col-gutter-md q-mb-md">
                 <div class="col-xs-12 col-sm-6 col-md-4">
                   <q-input filled v-model="personaData.nombres" label="Nombres"
@@ -43,22 +87,20 @@
                     style="width: 100%; height: 100px;" />
                 </div>
               </div>
-
-              <div class="row q-col-gutter-md q-mb-md">
-                <div class="col-xs-12 col-sm-6 col-md-4">
-                  <label>Imagen del Propietario (Opcional)</label>
-                  <input type="file" ref="fotoUploader" class="dropify" data-height="100%" />
-                </div>
+              <!-- Campo para imagen del propietario -->
+              <div class="col-xs-12 col-sm-6 col-md-4">
+                <label for="foto">Subir Foto del Propietario</label>
+                <input type="file" class="dropify" id="foto" accept="image/*;capture=camera" />
               </div>
 
               <div id="map" class="q-mt-md" style="height: 300px; width: 100%"></div>
 
               <div class="q-pa-md row justify-evenly">
                 <q-btn label="Registrar" type="submit" color="primary" />
-                <q-btn label="Resetear" type="reset" color="negative" />
+                <q-btn label="Resetear" type="reset" color="green" />
               </div>
               <div class="q-pa-md row justify-evenly">
-                <q-btn label="Cerrar" color="green" @click="closeModalPersona" />
+                <q-btn label="Cerrar" color="negative" @click="closeModalPersona" />
               </div>
             </q-form>
           </q-card-section>
@@ -92,25 +134,27 @@
                   <q-select filled v-model="mascotaData.genero" :options="['Macho', 'Hembra']" label="Género" />
                 </div>
                 <div class="col-xs-12 col-sm-6 col-md-4">
-                  <q-select filled v-model="mascotaData.especie" :options="['Perro', 'Gato']" label="Especie" lazy-rules
-                    required />
+                  <q-select filled v-model="mascotaData.especie" :options="['Perro', 'Gato']" label="Especie"
+                    @update:model-value="onEspecieChange" lazy-rules required />
                 </div>
+
               </div>
 
               <div class="row q-col-gutter-md q-mb-md">
                 <div class="col-xs-12 col-sm-6 col-md-4">
-                  <!-- <q-select filled v-model="" :options="razasOptions" label="Raza" use-input /> -->
-                  <q-select filled style="width: 100%; text-transform: uppercase" v-model="selectedRaza" use-input
-                    input-debounce="0" label="Raza" :options="filteredRazas" @filter="filterRazas" option-value="id"
-                    option-label="nombre" hint="Seleccione una Raza" lazy-rules
-                    :rules="[(val) => !!val || 'Seleccione una Raza']"></q-select>
+                  <q-select filled v-model="mascotaData.raza_id" use-input input-debounce="0" label="Raza"
+                    :options="filteredRazas" option-value="id" option-label="nombre" clearable
+                    hint="Seleccione una Raza" lazy-rules @filter="filterRazas" :disable="!mascotaData.especie"
+                    :rules="[(val) => !!val || 'Seleccione una Raza']" />
                 </div>
+
                 <div class="col-xs-12 col-sm-6 col-md-4">
                   <q-input filled v-model="mascotaData.color" label="Color" />
                 </div>
                 <div class="col-xs-12 col-sm-6 col-md-4">
-                  <q-select filled v-model="mascotaData.rangoEdad" :options="['0-4', '5-9', '10-15']"
-                    label="Rango de Edad" />
+                  <q-input filled v-model="mascotaData.rangoEdad" label="Edad (0-20 años)" type="number"
+                    :rules="[(val) => val >= 0 && val <= 15 || 'La edad debe estar entre 0 y 20 años']" lazy-rules
+                    required min="0" max="20" />
                 </div>
               </div>
 
@@ -120,44 +164,203 @@
                   <q-input filled v-model="mascotaData.descripcion" label="Descripción" type="textarea" />
                 </div>
                 <div class="col-xs-12 col-sm-6 col-md-4">
-                  <q-input filled v-model="mascotaData.tamanio" label="Tamaño (Pequeño, Mediano, Grande)" lazy-rules
-                    required />
+                  <q-select filled v-model="mascotaData.tamanio" :options="['Pequeño', 'Mediano', 'Grande']"
+                    label="Tamaño (Pequeño, Mediano, Grande)" lazy-rules required />
                 </div>
               </div>
 
-              <div class="row q-col-gutter-md q-mb-md">
-                <div class="col-xs-12 col-sm-6 col-md-4">
-                  <label>Foto Frontal</label>
-                  <input type="file" ref="fotoUploader" class="dropify" data-height="100%" />
-                </div>
-                <div class="col-xs-12 col-sm-6 col-md-4">
-                  <label>Foto Lateral</label>
-                  <input type="file" ref="fotoUploader" class="dropify" data-height="100%" />
+              <!-- Campo para imagen frontal -->
+              <div class="col-xs-12 col-sm-6 col-md-4">
+                <div>
+                  <label for="fotoFrontal">Subir Imagen Frontal</label>
+                  <input type="file" class="dropify" id="fotoFrontal" accept="image/*;capture=camera" />
                 </div>
               </div>
 
-              <div class="q-pa-md row justify-evenly">
-                <q-btn label="Registrar Mascota" type="submit" color="primary" />
-                <q-btn label="Cerrar" color="negative" @click="closeModalMascota" />
+              <!-- Campo para imagen lateral -->
+              <div class="col-xs-12 col-sm-6 col-md-4">
+                <div>
+                  <label for="fotoLateral">Subir Imagen Lateral</label>
+                  <input type="file" class="dropify" id="fotoLateral" accept="image/*;capture=camera" />
+                </div>
               </div>
+
+
+
+              <div class="q-pa-md row justify-between">
+                <div class="q-pa-md row justify-center">
+                  <q-btn label="Guardar y seguir registrando" color="teal" @click="submitAndContinue" />
+                </div>
+                <div class="q-pa-md row justify-center">
+                  <q-btn label="Registrar y finalizar" color="primary" @click="mostrarMascotasDirectamente" />
+                </div>
+                <div class="q-pa-md row justify-center">
+                  <q-btn label="Cerrar" color="negative" @click="isModalMascotaOpen = false"
+                    :disable="buttonsDisabled" />
+                </div>
+              </div>
+
             </q-form>
           </q-card-section>
         </q-card>
       </q-dialog>
+
+      <!-- Modal para Historial de Vacunas -->
+      <q-dialog v-model="isModalVacunacionOpen" persistent>
+        <q-card style="min-width: 60vw; max-height: 90vh;">
+          <q-card-section>
+            <div class="text-h6">Historial de Vacunación de Mascotas</div>
+          </q-card-section>
+
+          <q-separator></q-separator>
+
+          <q-card-section>
+            <!-- Lista de mascotas del propietario seleccionado -->
+            <div v-if="mascotas.length > 0">
+              <div v-for="mascota in mascotas" :key="mascota.id">
+                <q-card>
+                  <q-card-section>
+                    <div class="foto-mascota">
+                      <q-img
+                        :src="`${storage.defaults.baseURL}/${mascota.fotoFrontal}` || 'https://via.placeholder.com/150'"
+                        alt="Foto del perro" class="mascota-imagen" />
+                    </div>
+                    <q-input filled v-model="mascota.nombre" label="Nombre del Perro" disable />
+                    <q-select v-model="mascota.miembroSeleccionado" label="Miembro de la Brigada" :options="miembrosBrigada.map(miembro => ({
+                      label: `${miembro.persona.nombres} ${miembro.persona.apellidos}`,
+                      value: miembro.id
+                    }))" filled />
+
+                    <!-- Botones de estado de vacunación -->
+                    <div class="q-mt-md">
+                      <q-btn block unelevated :color="mascota.vacunado === 1 ? 'green' : 'grey'"
+                        @click="mascota.vacunado = 1">
+                        <q-icon name="check" /> Vacunado
+                      </q-btn>
+                      <q-btn block unelevated :color="mascota.vacunado === 0 ? 'red' : 'grey'"
+                        @click="mascota.vacunado = 0">
+                        <q-icon name="close" /> No Vacunado
+                      </q-btn>
+                    </div>
+
+                    <!-- Motivo si no vacunado -->
+                    <div v-if="mascota.vacunado === 0" class="q-mt-md">
+                      <q-select v-model="mascota.motivo" label="Motivo de no vacunación" :options="[
+                        { label: 'Menor a 3 meses', value: 1 },
+                        { label: 'Gestación', value: 2 },
+                        { label: 'Enfermedad grave', value: 3 },
+                        { label: 'Ausente', value: 4 }
+                      ]" emit-value map-options />
+                    </div>
+
+                    <!-- Botón para guardar cambios -->
+                    <q-btn color="primary" label="Guardar" class="q-mt-md" @click="guardarHistorial(mascota)" />
+                  </q-card-section>
+                </q-card>
+              </div>
+              <!-- Botón para salir-->
+              <q-btn color="negative" label="Cerrar" class="q-mt-md" @click="closeModalVacunacion" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </q-dialog>
+
+
+
+
+
+
     </div>
   </q-page>
 </template>
 
+
 <script setup>
-import { ref, nextTick } from 'vue';
+import $ from 'jquery'; // Importa jQuery primero
+import { ref, nextTick, computed } from 'vue';
 import { onMounted } from "vue";
 import Swal from 'sweetalert2';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import 'dropify/dist/css/dropify.css';
 import Dropify from 'dropify';
-import { api } from "boot/axios";
+import { api, customAxios, storage } from "boot/axios";
+// Importar Dropify CSS y JS
+import 'dropify/dist/css/dropify.min.css';
+import 'dropify/dist/js/dropify.min.js';
+import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';  // Importa useQuasar
+const router = useRouter();  // Crea una instancia del router
 
+// Función para registrar la mascota y cerrar el modal
+const submitAndClose = async () => {
+
+
+
+  openModalVacunacion(); // Solo abre si hay mascotas
+
+
+};
+const $q = useQuasar();
+const mostrarBotonCancelar = ref(false);
+const personas = ref([]);
+const search = ref('');
+const columns = [
+  { name: 'nombres_apellidos', label: 'Nombres y Apellidos', field: 'nombres_apellidos', align: 'center' },
+  { name: 'ci', label: 'CI', field: 'ci', align: 'center' },
+  { name: 'telefono', label: 'Teléfono', field: 'telefono', align: 'center' },
+  { name: 'foto', label: 'Foto', field: 'foto', align: 'center', format: val => val || 'Sin imagen' },  // Foto por defecto si está vacía
+  { name: 'registro', label: 'Registrar Mascota', field: 'registro', align: 'center', sortable: false },
+  { name: 'vacuna', label: 'Registrar Vacuna', field: 'vacuna', align: 'center', sortable: false }, // Nueva columna
+  { name: 'acciones', label: 'Acciones', align: 'center' }
+];
+
+const filteredPersonas = computed(() => {
+  if (!search.value) {
+    return personas.value;
+  }
+  return personas.value.filter(persona => {
+    const searchTerm = search.value.toLowerCase();
+    return (
+      persona.nombres_apellidos.toLowerCase().includes(searchTerm) ||
+      persona.ci.toLowerCase().includes(searchTerm) ||
+      persona.telefono.toLowerCase().includes(searchTerm)
+    );
+  });
+});
+
+const isLoading = ref(true);
+
+const fetchPropietarios = async () => {
+  try {
+    const response = await api.get('/propietarios');
+    personas.value = response.data.map(propietario => ({
+      nombres_apellidos: `${propietario.persona.nombres} ${propietario.persona.apellidos}`,
+      ci: propietario.persona.ci,
+      telefono: propietario.persona.telefono,
+      foto: propietario.foto || '',  // Asegúrate de que haya al menos un string vacío si no hay foto
+      propietario_id: propietario.id
+    }));
+    isLoading.value = false;  // Indicar que la carga ha terminado
+  } catch (error) {
+    console.error('Error fetching propietarios:', error);
+  }
+};
+const props = defineProps({
+  row: {
+    type: Object,
+    required: true
+  }
+});
+
+const getStorageUrl = (path) => {
+  if (!path) {
+    console.error('La propiedad foto no está definida:', path);  // Asegúrate de que el path esté definido
+    return '';
+  }
+  const url = `${customAxios.defaults.baseURL}${path}`;
+  console.log('URL de la imagen generada:', url);  // Revisa que la URL esté bien formada
+  return url;
+};
 const personaData = ref({
   nombres: '',
   apellidos: '',
@@ -181,7 +384,7 @@ const mascotaData = ref({
   color: '',
   rangoEdad: '',
   tamanio: '',
-  raza_id: '',
+  raza_id: '',  // Importante para asegurarnos de que esté el ID de raza, no el objeto
   fotoFrontal: null,
   fotoLateral: null,
   descripcion: ''  // Nuevo campo de descripción
@@ -190,14 +393,12 @@ const mascotaData = ref({
 const isModalPersonaOpen = ref(false);
 const isModalMascotaOpen = ref(false);
 const razas = ref([]);
-const selectedRaza = ref(null);
 const filteredRazas = ref([]);
 let map;
 let currentMarker = null;
 
 const openModalPersona = () => {
   isModalPersonaOpen.value = true;
-
   setTimeout(() => {
     initializeDropify();
     initializeMap();
@@ -209,10 +410,29 @@ const closeModalPersona = () => {
   resetFormPersona();
 };
 
-const openModalMascota = (nombrePropietario) => {
+const openModalMascota = (nombre, apellidos, propietarioId) => {
   isModalMascotaOpen.value = true;
-  mascotaData.value.propietario = nombrePropietario; // Asignamos el nombre del propietario
+  buttonsDisabled.value = true; // Deshabilita los botones
+
+  const nombreCompleto = `${nombre || ''} ${apellidos || ''}`.trim();
+  mascotaData.value.propietario = nombreCompleto;
+  mascotaData.value.propietario_id = propietarioId;
+
+  initializeDropify();
 };
+
+
+const openModalMascotas = (row) => {
+  isModalMascotaOpen.value = true;
+  buttonsDisabled.value = false; // Habilita los botones
+
+  const nombreCompleto = `${row.nombres_apellidos || ''}`.trim();
+  mascotaData.value.propietario = nombreCompleto;
+  mascotaData.value.propietario_id = Number(row.propietario_id);
+
+  initializeDropify();
+};
+
 
 const closeModalMascota = () => {
   isModalMascotaOpen.value = false;
@@ -220,9 +440,14 @@ const closeModalMascota = () => {
 };
 
 const initializeDropify = () => {
-  const fotoUploader = document.querySelector('.dropify');
-  new Dropify(fotoUploader);
+  setTimeout(() => {
+    // Inicializar Dropify para cada campo de imagen
+    $('#fotoFrontal').dropify(); // Para el campo de imagen frontal
+    $('#fotoLateral').dropify(); // Para el campo de imagen lateral
+    $('#foto').dropify(); // Para la foto del propietario
+  }, 300);  // Esperar 300ms para asegurarse de que el DOM esté listo
 };
+
 
 const initializeMap = () => {
   nextTick(() => {
@@ -293,9 +518,23 @@ const resetFormPersona = () => {
     direccion: '',
     observaciones: '',
     latitud: '',
-    longitud: '',
-    foto: null
+    longitud: ''
   };
+  // Limpiar Dropify
+  const fotoPropietarioElement = $('#foto').data('dropify');
+  if (fotoPropietarioElement) {
+    fotoPropietarioElement.resetPreview();  // Limpiar campo de imagen del propietario
+  }
+
+  const fotoFrontalElement = $('#fotoFrontal').data('dropify');
+  if (fotoFrontalElement) {
+    fotoFrontalElement.resetPreview();  // Limpiar campo de imagen frontal
+  }
+
+  const fotoLateralElement = $('#fotoLateral').data('dropify');
+  if (fotoLateralElement) {
+    fotoLateralElement.resetPreview();  // Limpiar campo de imagen lateral
+  }
 
   if (currentMarker) {
     map.removeLayer(currentMarker);
@@ -314,72 +553,170 @@ const resetFormMascota = () => {
     rangoEdad: '',
     tamanio: '',
     raza_id: '',
-    fotoFrontal: null,
-    fotoLateral: null,
     descripcion: ''  // Limpiar también la descripción
   };
+
 };
 
 const submitFormPersona = async () => {
   console.log("Intentando registrar persona y propietario...");
+  console.log("Datos de persona a enviar:", personaData.value); // Agrega este log para revisar los datos
+
   try {
-    console.log("Datos a enviar para Persona:", personaData.value);
-    const personaResponse = await api.post('/personas', personaData.value);
+    // Crear un nuevo objeto FormData solo para la persona
+    const formDataPersona = new FormData();
+    formDataPersona.append('nombres', personaData.value.nombres);
+    formDataPersona.append('apellidos', personaData.value.apellidos);
+    formDataPersona.append('ci', personaData.value.ci);
+    formDataPersona.append('telefono', personaData.value.telefono);
+
+    // Realizar la solicitud POST solo para la Persona
+    const personaResponse = await api.post('/personas', formDataPersona, {
+      headers: {
+        'Content-Type': 'multipart/form-data', // Importante para enviar archivos
+      },
+    });
+
+    // Ahora tomamos el ID de la Persona registrada
     const personaId = personaResponse.data.persona.id;
     propietarioData.value.persona_id = personaId;
 
-    console.log("Persona registrada con éxito:", personaResponse.data);
-    console.log("Datos a enviar para Propietario:", propietarioData.value);
-    const propietarioResponse = await api.post('/propietarios', propietarioData.value);
+    // Crear otro FormData solo para el propietario
+    const formDataPropietario = new FormData();
+    formDataPropietario.append('direccion', propietarioData.value.direccion);
+    formDataPropietario.append('observaciones', propietarioData.value.observaciones);
+    formDataPropietario.append('latitud', propietarioData.value.latitud);
+    formDataPropietario.append('longitud', propietarioData.value.longitud);
 
-    console.log("Propietario registrado con éxito:", propietarioResponse.data);
+    // Capturar la imagen del propietario si se ha seleccionado
+    const fotoPropietario = document.getElementById('foto').files[0];
+    if (!fotoPropietario) {
+      console.error("No file selected for upload");
+    } else {
+      formDataPropietario.append('foto', fotoPropietario); // Añadir la imagen al FormData de la persona
+    }
 
-    Swal.fire('Éxito', 'Persona y propietario registrados correctamente', 'success');
+    // Añadir el ID de la persona al FormData del propietario
+    formDataPropietario.append('persona_id', personaId);
+
+    // Realizar la solicitud POST para el Propietario
+    const propietarioResponse = await api.post('/propietarios', formDataPropietario, {
+      headers: {
+        'Content-Type': 'multipart/form-data', // Importante para enviar archivos
+      },
+    });
+
+    const propietario = propietarioResponse.data.propietario;
+
+    // Una vez que ambos registros estén completos, abre el modal para las mascotas
+    openModalMascota(personaData.value.nombres, personaData.value.apellidos, propietario.id);
+
+    // Mostrar mensaje de éxito
+    $q.notify({
+      type: 'positive',
+      message: 'Persona y propietario registrados correctamente',
+      position: 'top'
+    });
+    fetchPropietarios();
+
     closeModalPersona();
-
-    // Abrimos el modal de mascotas y pasamos el nombre del propietario
-    openModalMascota(personaData.value.nombres);
   } catch (error) {
     if (error.response) {
-      console.error("Error en la respuesta del servidor:", error.response.data);
+      console.error('Error en la respuesta del servidor:', error.response.data); // Revisa este error detalladamente
     } else if (error.request) {
-      console.error("No hubo respuesta del servidor:", error.request);
+      console.error('No hubo respuesta del servidor:', error.request);
     } else {
-      console.error("Error al configurar la solicitud:", error.message);
+      console.error('Error al configurar la solicitud:', error.message);
     }
-    Swal.fire('Error', 'Hubo un error al registrar los datos', 'error');
+    $q.notify({
+      type: 'negative',
+      message: 'Hubo un error al registrar los datos',
+      position: 'top'
+    });
   }
 };
 
-const submitFormMascota = async () => {
-  console.log("Intentando registrar mascota...");
+
+const submitFormMascota = async (closeModal = true) => {
+  // Verificar los datos antes de enviar
+  console.log("Datos de mascota a enviar:", mascotaData.value);
+
+  // Validar que la edad esté entre 1 y 15
+  if (mascotaData.value.rangoEdad < 1 || mascotaData.value.rangoEdad > 15) {
+    Swal.fire('Error', 'La edad debe estar entre 1 y 15 años', 'error');
+    return;
+  }
+
+  // Obtener la fecha actual de Bolivia (zona horaria -04:00)
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const birthYear = currentYear - mascotaData.value.rangoEdad;
+
+  // Crear la fecha de nacimiento en formato YYYY-MM-DD
+  //const fechaNacimiento = ${ birthYear }-${ now.getMonth() + 1 } -${ now.getDate() };
+  const month = String(now.getMonth() + 1).padStart(2, '0');  // Mes con dos dígitos
+  const day = String(now.getDate()).padStart(2, '0');  // Día con dos dígitos
+  const fechaNacimiento = `${birthYear}-${month}-${day}`;  // Genera la fecha con el formato correcto
+
+  console.log("Fecha de nacimiento calculada:", fechaNacimiento);
+
   try {
     const formData = new FormData();
     formData.append('nombre', mascotaData.value.nombre);
     formData.append('genero', mascotaData.value.genero);
     formData.append('especie', mascotaData.value.especie);
     formData.append('color', mascotaData.value.color);
-    formData.append('rangoEdad', mascotaData.value.rangoEdad);
     formData.append('tamanio', mascotaData.value.tamanio);
-    formData.append('raza_id', mascotaData.value.raza_id);
+    formData.append('raza_id', mascotaData.value.raza_id.id); // Solo el ID de raza
     formData.append('descripcion', mascotaData.value.descripcion);
+    formData.append('propietario_id', mascotaData.value.propietario_id);
 
-    if (mascotaData.value.fotoFrontal) {
-      formData.append('fotoFrontal', mascotaData.value.fotoFrontal);
+    // Enviar la fecha calculada como fecha de nacimiento
+    formData.append('rangoEdad', fechaNacimiento);
+
+    // Capturar las imágenes del DOM usando los IDs de los campos de Dropify
+    const frontalImage = document.getElementById('fotoFrontal').files[0];  // Imagen frontal
+    const lateralImage = document.getElementById('fotoLateral').files[0];  // Imagen lateral
+
+    // Si existe una imagen frontal, la añadimos al FormData
+    if (frontalImage) {
+      formData.append('fotoFrontal', frontalImage);  // Nombre del campo en FormData: 'fotoFrontal'
     }
 
-    if (mascotaData.value.fotoLateral) {
-      formData.append('fotoLateral', mascotaData.value.fotoLateral);
+    // Si existe una imagen lateral, la añadimos al FormData
+    if (lateralImage) {
+      formData.append('fotoLateral', lateralImage);  // Nombre del campo en FormData: 'fotoLateral'
     }
+
+
+    console.log("Datos enviados en FormData:", formData);
 
     const mascotaResponse = await api.post('/mascotas', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
     console.log("Mascota registrada con éxito:", mascotaResponse.data);
+    $q.notify({
+      type: 'positive',
+      message: 'Mascota registrada correctamente',
+      position: 'top'
+    });
 
-    Swal.fire('Éxito', 'Mascota registrada correctamente', 'success');
-    closeModalMascota();
+    // Habilitar los botones una vez registrado
+    buttonsDisabled.value = false;
+
+    // Limpiar los campos de Dropify después de un registro exitoso
+    const fotoFrontalElement = $('#fotoFrontal').dropify();
+    fotoFrontalElement.data('dropify').resetPreview();
+    fotoFrontalElement.data('dropify').clearElement();
+
+    const fotoLateralElement = $('#fotoLateral').dropify();
+    fotoLateralElement.data('dropify').resetPreview();
+    fotoLateralElement.data('dropify').clearElement();
+
+    if (closeModal) {
+      closeModalMascota(); // Solo cierra el modal si se indica
+    }
   } catch (error) {
     if (error.response) {
       console.error("Error en la respuesta del servidor:", error.response.data);
@@ -388,14 +725,44 @@ const submitFormMascota = async () => {
     } else {
       console.error("Error al configurar la solicitud:", error.message);
     }
-    Swal.fire('Error', 'Hubo un error al registrar la mascota', 'error');
+    $q.notify({
+      type: 'negative',
+      message: 'Hubo un error al registrar la mascota',
+      position: 'top'
+    });
   }
+
 };
 
-// Llamada para cargar las razas
-const fetchRazas = async () => {
+// Función para registrar y cerrar el modal
+const submitAndContinue = async () => {
+  // Registrar la mascota actual
+  await submitFormMascota(false); // Pasamos un argumento para no cerrar el modal
+
+  // Guardar el nombre del propietario actual antes de limpiar
+  const propietarioActual = mascotaData.value.propietario;
+
+  // Limpiar los campos del formulario excepto el propietario
+  mascotaData.value.nombre = '';
+  mascotaData.value.genero = '';
+  mascotaData.value.especie = '';
+  mascotaData.value.color = '';
+  mascotaData.value.rangoEdad = '';
+  mascotaData.value.tamanio = '';
+  mascotaData.value.raza_id = '';
+  mascotaData.value.descripcion = '';
+  mascotaData.value.fotoFrontal = null;
+  mascotaData.value.fotoLateral = null;
+
+  // Restaurar el propietario en el campo correspondiente
+  mascotaData.value.propietario = propietarioActual;
+};
+
+
+// Función para obtener razas filtradas por tipo (0 = Perro, 1 = Gato)
+const fetchRazas = async (tipo) => {
   try {
-    const response = await api.get('/razas');
+    const response = await api.get(`/razas?tipo=${tipo}`); // El tipo 0 para perros, 1 para gatos
     razas.value = response.data;
     filteredRazas.value = razas.value;
   } catch (error) {
@@ -403,28 +770,144 @@ const fetchRazas = async () => {
   }
 };
 
+const onEspecieChange = (especie) => {
+  if (!especie) {
+    filteredRazas.value = []; // Vaciar las razas si no hay especie seleccionada
+    return;
+  }
+  const tipo = especie === 'Perro' ? 0 : 1; // 0 para perros, 1 para gatos
+
+  fetchRazas(tipo); // Llamar a la función fetchRazas con el tipo adecuado
+};
+import axios from 'axios';
+
+
 // Cargar las razas al montar el componente
 onMounted(() => {
+  fetchPropietarios();
   fetchRazas();
+  setTimeout(() => {
+    $('#foto').dropify();  // Asegúrate de que Dropify está inicializado correctamente
+  }, 300);  // Esperar 300ms para asegurarse de que el DOM esté listo
 });
 
 const filterRazas = (val, update) => {
-  if (val === "") {
-    update(() => {
-      filteredRazas.value = razas.value;
-    });
-    return;
-  }
-
   update(() => {
-    const needle = val.toLowerCase();
-    filteredRazas.value = razas.value.filter((v) =>
-      v.nombre.toLowerCase().includes(needle)
-    );
+    if (val === '') {
+      filteredRazas.value = razas.value; // Si no hay búsqueda, se muestran todas las razas
+    } else {
+      const needle = val.toLowerCase();
+      filteredRazas.value = razas.value.filter((raza) =>
+        raza.nombre.toLowerCase().includes(needle) // Filtra según el nombre de la raza
+      );
+    }
   });
 };
-</script>
 
+const isModalVacunacionOpen = ref(false);
+
+const openModalVacunacion = () => {
+  console.log("Abriendo modal de vacunación...");
+  isModalVacunacionOpen.value = true;
+};
+
+const closeModalVacunacion = () => {
+  isModalVacunacionOpen.value = false;
+};
+
+// Funciones reutilizadas del primer código para la búsqueda de propietarios, mascotas y el historial de vacunación
+const propietarios = ref([]);
+const propietarioSeleccionado = ref(null);
+const mascotas = ref([]);
+const miembrosBrigada = ref([]);
+
+const obtenerMiembrosBrigada = async () => {
+  try {
+    const brigadaId = localStorage.getItem('brigadaUserId');
+    const response = await api.get(`/brigadas/${brigadaId}/miembros`);
+    miembrosBrigada.value = response.data;
+  } catch (error) {
+    console.error("Error al obtener miembros de la brigada:", error);
+  }
+};
+
+const guardarHistorial = async (mascota) => {
+  try {
+    // Validación si no vacunado y motivo no seleccionado
+    if (mascota.vacunado === 0 && !mascota.motivo) {
+      $q.notify({
+        type: 'negative',
+        message: 'Debe seleccionar un motivo si la mascota no fue vacunada.'
+      });
+      return;
+    }
+
+    const data = {
+      estado: mascota.vacunado, // 1 para vacunado, 0 para no vacunado
+      motivo: mascota.vacunado === 0 ? mascota.motivo : null, // Ahora motivo es un entero
+      mascota_id: mascota.id,
+      miembro_id: mascota.miembroSeleccionado.value || mascota.miembroSeleccionado, // Obtener el ID del miembro
+      brigada_id: localStorage.getItem('brigadaUserId') // ID de la brigada
+    };
+
+    console.log("Datos enviados al backend:", data);
+
+    // Enviar los datos al backend
+    const response = await api.post('/historiavacunas', data);
+
+    if (response.status === 200) {
+      $q.notify({
+        type: 'positive',
+        message: 'Historial de vacunación guardado correctamente.'
+      });
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Error al guardar el historial de vacunación.'
+    });
+    console.error("Error:", error);
+  }
+};
+
+const mostrarMascotasDirectamente = async () => {
+  await submitFormMascota(false);
+  try {
+    const propietarioId = mascotaData.value.propietario_id;
+    const response = await api.get(`/propietarios/${propietarioId}/mascotas`);
+    closeModalMascota();
+    console.log('Mascotas cargadas:', response.data);
+    obtenerMiembrosBrigada();
+    mascotas.value = response.data;
+    openModalVacunacion();
+  } catch (error) {
+    console.error("Error al obtener las mascotas del propietario:", error);
+  }
+};
+
+// Estado para controlar si los botones deben estar deshabilitados o no
+const buttonsDisabled = ref(true);
+
+const openModalVacunaDirectamente = async (row) => {
+  try {
+    const propietarioId = row.propietario_id; // ID del propietario seleccionado
+    const response = await api.get(`/propietarios/${propietarioId}/mascotas`);
+
+    console.log('Mascotas cargadas:', response.data);
+    mascotas.value = response.data; // Asigna las mascotas al modal
+    obtenerMiembrosBrigada(); // Llamar a la función que carga los miembros de brigada
+    openModalVacunacion(); // Abre el modal de historial de vacunación
+  } catch (error) {
+    console.error("Error al obtener las mascotas del propietario:", error);
+    $q.notify({
+      type: 'negative',
+      message: 'Hubo un error al cargar las mascotas para vacunación',
+      position: 'top'
+    });
+  }
+};
+
+</script>
 <style scoped>
 #map {
   height: 300px;
@@ -439,5 +922,43 @@ const filterRazas = (val, update) => {
   position: absolute;
   top: 0;
   right: 0;
+}
+
+.dropify-wrapper {
+  margin-bottom: 20px;
+}
+
+.foto-mascota {
+  display: flex;
+  justify-content: center;
+}
+
+.mascota-imagen {
+  max-width: 150px;
+  border-radius: 10px;
+}
+
+.q-td img {
+  width: 80px;
+  /* Ancho estándar */
+  height: 80px;
+  /* Altura estándar */
+  object-fit: cover;
+  /* Mantiene el recorte adecuado */
+  border-radius: 5px;
+  /* Redondeo de bordes */
+}
+
+.foto-mascota img {
+  width: 100px;
+  /* Ancho fijo */
+  height: 100px;
+  /* Altura fija */
+  object-fit: cover;
+  /* Mantiene el recorte adecuado */
+  border-radius: 10px;
+  /* Redondeo de bordes */
+  margin-bottom: 10px;
+  /* Espacio entre la imagen y el contenido */
 }
 </style>

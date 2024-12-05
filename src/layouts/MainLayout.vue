@@ -1,106 +1,242 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+  <q-layout view="lHh Lpr lFf" class="bg-yellow-7">
+    <q-header elevated style="background-color: #1e534c;" class="text-brown">
       <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
-
-        <q-toolbar-title>
-          Quasar App
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" class="text-white" />
+        <q-toolbar-title
+          style="color: white; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ; font-size: 22px; text-transform: uppercase;">
+          {{ userName }}
         </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="drawer-bg">
+      <div class="logo-container">
+        <img src="/perros.png" alt="Logo" class="logo" />
+      </div>
+      <div class="divider"></div>
       <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
 
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
+        <router-link to="/" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="home" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">INICIO</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaRegistroJefeZona" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="supervisor_account" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">JEFE DE ZONA</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaRegistroMiembros" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="groups" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">MIEMBROS</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaRegistroCampania" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="public" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">CAMPAÑAS</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaRegistroZona" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="place" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">ZONAS</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaRegistros" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="book" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">REGISTROS</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaRegistroVacunas" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="vaccines" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">VACUNAS</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaConsultaVacunas" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="search" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">CONSULTA VACUNAS</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
+        <router-link to="/PaginaCorrecciones" exact-active-class="q-item-active-selected"
+          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
+          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
+            <div class="flex-row" style="display: flex; align-items: center;">
+              <q-icon name="search" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">CORRECCIONES</span>
+            </div>
+          </q-item-section>
+        </router-link>
+
       </q-list>
+      <div class="logout-container">
+        <q-btn flat dense class="logout-btn" @click="logout" icon="exit_to_app" label="Cerrar Sesión" />
+      </div>
     </q-drawer>
 
-    <q-page-container>
+    <q-page-container class="bg-white">
       <router-view />
     </q-page-container>
   </q-layout>
 </template>
 
-<script setup>
-import { ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
+<script>
+import { ref } from "vue";
 
-defineOptions({
-  name: 'MainLayout'
-})
+export default {
+  setup() {
+    const leftDrawerOpen = ref(false);
+    const userName = ref(localStorage.getItem('userName') || ''); // Suponiendo que el nombre de usuario está almacenado en localStorage
 
-const linksList = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
-  }
-]
+    const toggleLeftDrawer = () => {
+      leftDrawerOpen.value = !leftDrawerOpen.value;
+    };
 
-const leftDrawerOpen = ref(false)
+    const logout = () => {
+      localStorage.removeItem('authToken'); // Elimina el token de autenticación
+      localStorage.removeItem('userName'); // Elimina el nombre de usuario
+      window.location.href = '/login';      // Redirige a la página de login
+    };
 
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
+    return {
+      leftDrawerOpen,
+      userName,
+      toggleLeftDrawer,
+      logout,
+    };
+  },
+};
 </script>
+
+<style>
+.header-bg {
+  background-color: #205b53;
+  /* Fondo más oscuro */
+  color: rgb(6, 104, 55);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Sombra para separar la barra */
+}
+
+.text-white {
+  color: rgb(255, 255, 255);
+}
+
+.bg-yellow-7 {
+  background-color: #6A9C89;
+  /* Color de fondo */
+}
+
+.drawer-bg {
+  background-color: #205b53;
+  /* Color del drawer */
+}
+
+.bg-white {
+  background-color: #E9EFEC;
+}
+
+.q-toolbar-title {
+  font-weight: bold;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+.logo {
+  width: 220px;
+  height: auto;
+}
+
+.user-info {
+  margin-top: 10px;
+  text-align: center;
+  color: #E9EFEC;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.header-bg {
+  background-color: var(--primary);
+}
+
+.bg-yellow-7 {
+  background-color: var(--primary);
+}
+
+.text {
+  color: #E9EFEC;
+}
+
+.drawer-bg {
+  background-color: #205b53;
+}
+
+.bg-white {
+  background-color: #E9EFEC;
+}
+
+.divider {
+  height: 5px;
+  background-color: #6A9C89;
+  margin: 15px 0;
+}
+
+.q-item-active-selected {
+  background-color: #6A9C89;
+  color: #ffffff;
+}
+
+.logout-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.logout-btn {
+  font-weight: bold;
+  color: #E9EFEC;
+  background-color: #6A9C89;
+  font-family: Arial, Helvetica, sans-serif;
+}
+</style>
