@@ -257,9 +257,6 @@ export default {
       }
     };
 
-
-
-
     const obtenerRazaPorMascota = async (mascotaId) => {
       try {
         // Usa la instancia `api` para obtener la raza de la mascota
