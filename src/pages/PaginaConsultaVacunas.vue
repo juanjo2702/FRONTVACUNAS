@@ -218,17 +218,11 @@ export default {
 
         let yPosition = 20;
         historial.forEach((registro, index) => {
-          // Verificar si el registro tiene una fecha válida
-          if (!registro.fecha || isNaN(new Date(registro.fecha))) {
-            console.warn(`Registro ${index + 1} tiene una fecha inválida:`, registro.fecha);
-            return; // Salta este registro si la fecha es inválida
-          }
-
-          // Procesar la fecha
-          const fechaVacunacion = new Date(registro.fecha);
-          fechaVacunacion.setHours(fechaVacunacion.getHours() - 5); // Ajusta el desfase horario
-          const fechaFormateada = fechaVacunacion.toISOString().split('T')[0];
-
+          // Verificar si la fecha está presente y válida
+          const fechaValida = registro.created_at && !isNaN(new Date(registro.created_at));
+          const fechaFormateada = fechaValida
+            ? registro.created_at.split('T')[0] // Obtiene solo la parte `YYYY-MM-DD`
+            : "Fecha inválida";
           // Agregar información al PDF
           doc.text(`${index + 1}. Estado: ${registro.estado === 1 ? 'Vacunado' : 'No Vacunado'}`, 8, yPosition);
           doc.text(`Fecha vacunación: ${fechaFormateada}`, 8, yPosition + 4);
