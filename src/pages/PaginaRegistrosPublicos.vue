@@ -15,38 +15,6 @@
         </div>
       </div>
       <q-table :rows="filteredPersonas" :columns="columns" row-key="id">
-        <template v-slot:body-cell-foto="props">
-          <q-td align="center">
-            <span v-if="props.row && props.row.foto">
-              <img :src="getStorageUrl(props.row.foto)" alt="Foto del Propietario" style="max-height: 100px;" />
-            </span>
-            <span v-else>No image available</span>
-          </q-td>
-        </template>
-
-
-        <!-- Botón de registrar mascota -->
-        <template v-slot:body-cell-registro="props">
-          <q-td align="center">
-            <q-btn flat icon="pets" color="teal" @click="openModalMascotas(props.row)" />
-          </q-td>
-        </template>
-
-        <!-- Botón de registrar vacuna -->
-        <template v-slot:body-cell-vacuna="props">
-          <q-td align="center">
-            <q-btn flat icon="vaccines" color="blue" @click="openModalVacunaDirectamente(props.row)" />
-          </q-td>
-        </template>
-
-
-        <!-- Botones de editar/eliminar -->
-        <template v-slot:body-cell-actions="props">
-          <q-td align="center">
-            <q-btn flat icon="edit" color="primary" @click="editPersona(props.row)" />
-            <q-btn flat icon="delete" color="negative" @click="deletePersona(props.row)" />
-          </q-td>
-        </template>
       </q-table>
 
       <!-- Modal con el formulario de registro de Persona -->
@@ -96,7 +64,7 @@
               <div id="map" class="q-mt-md" style="height: 300px; width: 100%"></div>
 
               <div class="q-pa-md row justify-evenly">
-                <q-btn label="Registrar" type="submit" color="primary" />
+                <q-btn label="Registrar" color="primary" @click="confirmAndSubmit" />
                 <q-btn label="Resetear" type="reset" color="green" />
               </div>
               <div class="q-pa-md row justify-evenly">
@@ -185,13 +153,10 @@
                 </div>
               </div>
 
-
-
               <div class="q-pa-md row justify-between">
                 <div class="q-pa-md row justify-center">
-                  <q-btn label="Guardar y seguir registrando" color="teal" @click="submitAndContinue" />
+                  <q-btn label="Registrar Mascota" color="teal" @click="submitAndContinueWithConfirmation" />
                 </div>
-
                 <div class="q-pa-md row justify-center">
                   <q-btn label="Cerrar" color="negative" @click="isModalMascotaOpen = false"
                     :disable="buttonsDisabled" />
@@ -202,13 +167,6 @@
           </q-card-section>
         </q-card>
       </q-dialog>
-
-
-
-
-
-
-
     </div>
   </q-page>
 </template>
@@ -229,15 +187,9 @@ import 'dropify/dist/js/dropify.min.js';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';  // Importa useQuasar
 const router = useRouter();  // Crea una instancia del router
-
 // Función para registrar la mascota y cerrar el modal
 const submitAndClose = async () => {
-
-
-
   openModalVacunacion(); // Solo abre si hay mascotas
-
-
 };
 const $q = useQuasar();
 const mostrarBotonCancelar = ref(false);
@@ -245,9 +197,6 @@ const personas = ref([]);
 const search = ref('');
 const columns = [
   { name: 'nombres_apellidos', label: 'Nombres y Apellidos', field: 'nombres_apellidos', align: 'center' },
-  { name: 'ci', label: 'CI', field: 'ci', align: 'center' },
-  { name: 'telefono', label: 'Teléfono', field: 'telefono', align: 'center' },
-  { name: 'foto', label: 'Foto', field: 'foto', align: 'center', format: val => val || 'Sin imagen' }  // Foto por defecto si está vacía
 ];
 
 const filteredPersonas = computed(() => {
@@ -739,108 +688,74 @@ const filterRazas = (val, update) => {
     }
   });
 };
-
-const isModalVacunacionOpen = ref(false);
-
-const openModalVacunacion = () => {
-  console.log("Abriendo modal de vacunación...");
-  isModalVacunacionOpen.value = true;
-};
-
-const closeModalVacunacion = () => {
-  isModalVacunacionOpen.value = false;
-};
-
-// Funciones reutilizadas del primer código para la búsqueda de propietarios, mascotas y el historial de vacunación
-const propietarios = ref([]);
-const propietarioSeleccionado = ref(null);
-const mascotas = ref([]);
-const miembrosBrigada = ref([]);
-
-const obtenerMiembrosBrigada = async () => {
-  try {
-    const brigadaId = localStorage.getItem('brigadaUserId');
-    const response = await api.get(`/brigadas/${brigadaId}/miembros`);
-    miembrosBrigada.value = response.data;
-  } catch (error) {
-    console.error("Error al obtener miembros de la brigada:", error);
-  }
-};
-
-const guardarHistorial = async (mascota) => {
-  try {
-    // Validación si no vacunado y motivo no seleccionado
-    if (mascota.vacunado === 0 && !mascota.motivo) {
-      $q.notify({
-        type: 'negative',
-        message: 'Debe seleccionar un motivo si la mascota no fue vacunada.'
-      });
-      return;
-    }
-
-    const data = {
-      estado: mascota.vacunado, // 1 para vacunado, 0 para no vacunado
-      motivo: mascota.vacunado === 0 ? mascota.motivo : null, // Ahora motivo es un entero
-      mascota_id: mascota.id,
-      miembro_id: mascota.miembroSeleccionado.value || mascota.miembroSeleccionado, // Obtener el ID del miembro
-      brigada_id: localStorage.getItem('brigadaUserId') // ID de la brigada
-    };
-
-    console.log("Datos enviados al backend:", data);
-
-    // Enviar los datos al backend
-    const response = await api.post('/historiavacunas', data);
-
-    if (response.status === 200) {
-      $q.notify({
-        type: 'positive',
-        message: 'Historial de vacunación guardado correctamente.'
-      });
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error al guardar el historial de vacunación.'
-    });
-    console.error("Error:", error);
-  }
-};
-
-const mostrarMascotasDirectamente = async () => {
-  await submitFormMascota(false);
-  try {
-    const propietarioId = mascotaData.value.propietario_id;
-    const response = await api.get(`/propietarios/${propietarioId}/mascotas`);
-    closeModalMascota();
-    console.log('Mascotas cargadas:', response.data);
-    obtenerMiembrosBrigada();
-    mascotas.value = response.data;
-    openModalVacunacion();
-  } catch (error) {
-    console.error("Error al obtener las mascotas del propietario:", error);
-  }
-};
-
 // Estado para controlar si los botones deben estar deshabilitados o no
 const buttonsDisabled = ref(true);
-
-const openModalVacunaDirectamente = async (row) => {
-  try {
-    const propietarioId = row.propietario_id; // ID del propietario seleccionado
-    const response = await api.get(`/propietarios/${propietarioId}/mascotas`);
-
-    console.log('Mascotas cargadas:', response.data);
-    mascotas.value = response.data; // Asigna las mascotas al modal
-    obtenerMiembrosBrigada(); // Llamar a la función que carga los miembros de brigada
-    openModalVacunacion(); // Abre el modal de historial de vacunación
-  } catch (error) {
-    console.error("Error al obtener las mascotas del propietario:", error);
+const confirmAndSubmit = () => {
+  $q.dialog({
+    title: '<span style="color: #4caf50;">Confirmación de Registro</span>',
+    message: `
+      <div style="display: flex; align-items: center; font-size: 16px;">
+        <q-icon name="person_add" color="green" style="margin-right: 8px;"></q-icon>
+        ¿Estás seguro de que sus datos son correctos?
+      </div>
+    `,
+    html: true, // Permite HTML en el mensaje
+    ok: {
+      label: 'Registrar',
+      color: 'green',
+      flat: false,
+    },
+    cancel: {
+      label: 'Cancelar',
+      color: 'negative',
+      flat: true,
+    },
+    persistent: true,
+  }).onOk(() => {
+    // Si acepta, proceder con el registro
+    submitFormPersona();
+  }).onCancel(() => {
+    // Si cancela, mostrar notificación
     $q.notify({
-      type: 'negative',
-      message: 'Hubo un error al cargar las mascotas para vacunación',
-      position: 'top'
+      type: 'warning',
+      message: 'Registro cancelado.',
+      position: 'top',
     });
-  }
+  });
+};
+
+const submitAndContinueWithConfirmation = () => {
+  $q.dialog({
+    title: '<span style="color: #2c82c9;">Confirmación</span>',
+    message: `
+      <div style="display: flex; align-items: center; font-size: 16px;">
+        <q-icon name="help_outline" color="blue" style="margin-right: 8px;"></q-icon>
+        ¿Estás seguro de que deseas registrar esta mascota? COMPRUEBE LOS DATOS
+      </div>
+    `,
+    html: true, // Permite HTML en el mensaje
+    ok: {
+      label: 'Sí, continuar',
+      color: 'primary',
+      flat: false,
+    },
+    cancel: {
+      label: 'Cancelar',
+      color: 'negative',
+      flat: true,
+    },
+    persistent: true,
+  }).onOk(() => {
+    // Acción al confirmar
+    submitAndContinue();
+  }).onCancel(() => {
+    // Notificación al cancelar
+    $q.notify({
+      type: 'warning',
+      message: 'Acción cancelada.',
+      position: 'top',
+    });
+  });
 };
 
 </script>

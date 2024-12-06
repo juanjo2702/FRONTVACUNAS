@@ -7,6 +7,13 @@ const routes = [
     ]
   },
   {
+    path: '/PreRegistro',
+    component: () => import('layouts/RegistroLayout.vue'),
+    children: [
+      { path: '/PreRegistro', component: () => import('pages/PaginaRegistrosPublicos.vue') }
+    ]
+  },
+  {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
@@ -20,10 +27,7 @@ const routes = [
       { path: '/PaginaCorrecciones', component: () => import('pages/PaginaCorrecciones.vue'), meta: { roles: [1, 2, 3] } }, // Todos los roles
     ]
   },
-  {
-    path: '/PreRegistro',
-    component: () => import('pages/PaginaRegistrosPublicos.vue') // Página pública
-  },
+
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue') // Página 404
