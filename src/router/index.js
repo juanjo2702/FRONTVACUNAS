@@ -10,34 +10,53 @@ export default route(function (/* { store, ssrContext } */) {
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
-
-    // Usa la configuración de quasar.conf.js para el modo de historial
-    history: createHistory(process.env.VUE_ROUTER_BASE)
+    history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  // Función de autenticación para verificar si hay un token
+  // Función para verificar si el usuario está autenticado
   function isAuthenticated() {
-    return !!localStorage.getItem('authToken'); // Verifica el token de autenticación
+    return !!localStorage.getItem('authToken');
   }
 
-  // Función para verificar permisos (si tienes lógica de permisos)
-  function hasPermission(requiredPermission) {
+  // Función para obtener el rol del usuario
+  function getUserRole() {
     const user = JSON.parse(localStorage.getItem('user'));
-    return user && user.permissions && user.permissions.includes(requiredPermission);
+    return user ? user.role : null;
   }
 
-  // Guard global para manejar la autenticación y permisos
+  // Guard global del router
   Router.beforeEach((to, from, next) => {
-    // Excepción para la ruta /PreRegistro
-    if (to.path === '/PreRegistro') {
-      next(); // Permitir el acceso sin autenticación
-    } else if (!isAuthenticated() && to.path !== '/login') {
-      next('/login');
-    } else if (to.meta.permiso && !hasPermission(to.meta.permiso)) {
-      next('/PaginaNoAcceso');
-    } else {
-      next(); // Permitir la navegación
+    const isAuthenticated = !!localStorage.getItem('authToken'); // Verifica si está autenticado
+    const userRoleId = parseInt(localStorage.getItem('userRoleId')); // Obtiene el rol del usuario
+
+    // Rutas públicas (sin restricción de autenticación)
+    if (to.path === '/PreRegistro' || to.path === '/login') {
+      next();
+      return;
     }
+
+    // Redirige al login si no está autenticado
+    /* if (!isAuthenticated) {
+      next('/login');
+      return;
+    } */
+
+    // Verifica si la ruta requiere roles específicos
+    const allowedRoles = to.meta.roles;
+    if (allowedRoles && !allowedRoles.includes(userRoleId)) {
+      // Redirige a la página principal según el rol del usuario
+      if (userRoleId === 1) {
+        next('/PaginaRegistroMiembros'); // Brigada
+      } else if (userRoleId === 2 || userRoleId === 3) {
+        next('/'); // Jefe de Zona y Administrador
+      } else {
+        next('/login'); // Redirige al login si el rol no es válido
+      }
+      return;
+
+    }
+    // Permite la navegación
+    next();
   });
 
   return Router;

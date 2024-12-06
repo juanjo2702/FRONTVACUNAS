@@ -10,112 +10,23 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      {
-        path: '',
-        component: () => import('pages/IndexPage.vue'),
-        beforeEnter: (to, from, next) => {
-          const roleId = parseInt(localStorage.getItem('userRoleId'));
-          if (roleId === 3 || roleId === 2) {
-            next(); // Admin y Jefe de Zona tienen acceso
-          } else {
-            next('/login'); // Redirige si no tiene el rol adecuado
-          }
-        }
-      },
-      {
-        path: '/PaginaRegistros',
-        component: () => import('pages/PaginaRegistros.vue'),
-        beforeEnter: (to, from, next) => {
-          const roleId = parseInt(localStorage.getItem('userRoleId'));
-          if (roleId === 3 || roleId === 2 || roleId === 1) {
-            next(); // Todos los roles tienen acceso
-          } else {
-            next('/login');
-          }
-        }
-      },
-      {
-        path: '/PaginaRegistroJefeZona',
-        component: () => import('pages/PaginaRegistroJefeZona.vue'),
-        beforeEnter: (to, from, next) => {
-          const roleId = parseInt(localStorage.getItem('userRoleId'));
-          if (roleId === 3) { // Solo Administrador
-            next();
-          } else {
-            next('/login');
-          }
-        }
-      },
-      {
-        path: '/PaginaRegistroZona',
-        component: () => import('pages/PaginaRegistroZona.vue'),
-        beforeEnter: (to, from, next) => {
-          const roleId = parseInt(localStorage.getItem('userRoleId'));
-          if (roleId === 3) { // Solo Administrador
-            next();
-          } else {
-            next('/login');
-          }
-        }
-      },
-      {
-        path: '/PaginaRegistroCampania',
-        component: () => import('pages/PaginaRegistroCampania.vue'),
-        beforeEnter: (to, from, next) => {
-          const roleId = parseInt(localStorage.getItem('userRoleId'));
-          if (roleId === 3) { // Solo Administrador tiene acceso
-            next();
-          } else {
-            next('/login');
-          }
-        }
-      },
-      {
-        path: '/PaginaRegistroMiembros',
-        component: () => import('pages/PaginaRegistroMiembros.vue'),
-        beforeEnter: (to, from, next) => {
-          const roleId = parseInt(localStorage.getItem('userRoleId'));
-          if (roleId === 3 || roleId === 1) { // Administrador y Brigada tienen acceso
-            next();
-          } else {
-            next('/login');
-          }
-        }
-      },
-      {
-        path: '/PaginaConsultaVacunas',
-        component: () => import('src/pages/PaginaConsultaVacunas.vue'),
-        beforeEnter: (to, from, next) => {
-          const roleId = parseInt(localStorage.getItem('userRoleId'));
-          if (roleId === 3 || roleId === 2 || roleId === 1) {
-            next(); // Todos los roles tienen acceso
-          } else {
-            next('/login');
-          }
-        }
-      },
-      {
-        path: '/PaginaCorrecciones',
-        component: () => import('src/pages/PaginaCorrecciones.vue'),
-        beforeEnter: (to, from, next) => {
-          const roleId = parseInt(localStorage.getItem('userRoleId'));
-          if (roleId === 3 || roleId === 2 || roleId === 1) {
-            next(); // Todos los roles tienen acceso
-          } else {
-            next('/login');
-          }
-        }
-      },
+      { path: '', component: () => import('pages/IndexPage.vue'), meta: { roles: [2, 3] } }, // Solo Jefe de Zona y Administrador
+      { path: '/PaginaRegistros', component: () => import('pages/PaginaRegistros.vue'), meta: { roles: [1, 2, 3] } }, // Todos los roles
+      { path: '/PaginaRegistroJefeZona', component: () => import('pages/PaginaRegistroJefeZona.vue'), meta: { roles: [3] } }, // Solo Administrador
+      { path: '/PaginaRegistroZona', component: () => import('pages/PaginaRegistroZona.vue'), meta: { roles: [3] } }, // Solo Administrador
+      { path: '/PaginaRegistroCampania', component: () => import('pages/PaginaRegistroCampania.vue'), meta: { roles: [2, 3] } }, // Solo Administrador
+      { path: '/PaginaRegistroMiembros', component: () => import('pages/PaginaRegistroMiembros.vue'), meta: { roles: [1, 3] } }, // Brigada y Administrador
+      { path: '/PaginaConsultaVacunas', component: () => import('pages/PaginaConsultaVacunas.vue'), meta: { roles: [1, 2, 3] } }, // Todos los roles
+      { path: '/PaginaCorrecciones', component: () => import('pages/PaginaCorrecciones.vue'), meta: { roles: [1, 2, 3] } }, // Todos los roles
     ]
   },
   {
     path: '/PreRegistro',
-    component: () => import('pages/PaginaRegistrosPublicos.vue') // Esta página es accesible para todos
+    component: () => import('pages/PaginaRegistrosPublicos.vue') // Página pública
   },
-  // Siempre deja esta ruta como última para manejar errores 404
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue')
+    component: () => import('pages/ErrorNotFound.vue') // Página 404
   },
 ];
 

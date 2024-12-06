@@ -16,88 +16,17 @@
       </div>
       <div class="divider"></div>
       <q-list>
-
-        <router-link v-if="canAccess(['3', '2'])" to="/" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
-          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
-            <div class="flex-row" style="display: flex; align-items: center;">
-              <q-icon name="home" size="md" color="white" />
-              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">INICIO</span>
-            </div>
-          </q-item-section>
-        </router-link>
-
-        <router-link v-if="canAccess(['3'])" to="/PaginaRegistroJefeZona" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
-          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
-            <div class="flex-row" style="display: flex; align-items: center;">
-              <q-icon name="supervisor_account" size="md" color="white" />
-              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">JEFE DE ZONA</span>
-            </div>
-          </q-item-section>
-        </router-link>
-
-        <router-link v-if="canAccess(['3'])" to="/PaginaRegistroCampania" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
-          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
-            <div class="flex-row" style="display: flex; align-items: center;">
-              <q-icon name="public" size="md" color="white" />
-              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">CAMPAÑAS</span>
-            </div>
-          </q-item-section>
-        </router-link>
-
-        <router-link v-if="canAccess(['3'])" to="/PaginaRegistroZona" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
-          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
-            <div class="flex-row" style="display: flex; align-items: center;">
-              <q-icon name="place" size="md" color="white" />
-              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">ZONAS</span>
-            </div>
-          </q-item-section>
-        </router-link>
-
-        <router-link v-if="canAccess(['1'])" to="/PaginaRegistroMiembros" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
-          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
-            <div class="flex-row" style="display: flex; align-items: center;">
-              <q-icon name="book" size="md" color="white" />
-              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">MIEMBROS</span>
-            </div>
-          </q-item-section>
-        </router-link>
-
-        <router-link v-if="canAccess(['3', '2', '1'])" to="/PaginaRegistros" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
-          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
-            <div class="flex-row" style="display: flex; align-items: center;">
-              <q-icon name="book" size="md" color="white" />
-              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">REGISTROS</span>
-            </div>
-          </q-item-section>
-        </router-link>
-
-        <router-link v-if="canAccess(['3', '2', '1'])" to="/PaginaConsultaVacunas"
+        <!-- Generar menú dinámico según los permisos -->
+        <router-link v-for="route in filteredRoutes" :key="route.path" :to="route.path"
           exact-active-class="q-item-active-selected" class="q-item q-item-type row no-wrap custom-link"
           style="text-decoration: none;">
           <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
             <div class="flex-row" style="display: flex; align-items: center;">
-              <q-icon name="search" size="md" color="white" />
-              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">CONSULTA VACUNAS</span>
+              <q-icon :name="route.icon" size="md" color="white" />
+              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">{{ route.label }}</span>
             </div>
           </q-item-section>
         </router-link>
-
-        <router-link to="/PaginaCorrecciones" exact-active-class="q-item-active-selected"
-          class="q-item q-item-type row no-wrap custom-link" style="text-decoration: none;">
-          <q-item-section style="font-size: 15px; font-weight: bold; color: #E9EFEC">
-            <div class="flex-row" style="display: flex; align-items: center;">
-              <q-icon name="search" size="md" color="white" />
-              <span style="margin-left: 10px;font-family: Arial, Helvetica, sans-serif;">CORRECCIONES</span>
-            </div>
-          </q-item-section>
-        </router-link>
-
       </q-list>
       <div class="logout-container">
         <q-btn flat dense class="logout-btn" @click="logout" icon="exit_to_app" label="Cerrar Sesión" />
@@ -111,44 +40,41 @@
 </template>
 
 <script>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed } from "vue";
 
 export default {
   setup() {
     const leftDrawerOpen = ref(false);
-    const userName = ref(localStorage.getItem('userName') || ''); // Suponiendo que el nombre de usuario está almacenado en localStorage
-    const userRoleId = localStorage.getItem('userRoleId');
-    const router = useRouter();
+    const userName = ref(localStorage.getItem("userName") || "Usuario");
+    const userRoleId = parseInt(localStorage.getItem("userRoleId") || "0"); // Obtener el rol del usuario
+
+    // Lista de rutas para el menú con iconos y etiquetas
+    const menuRoutes = [
+      { path: "/", label: "INICIO", icon: "dashboard", roles: [2, 3] },
+      { path: "/PaginaRegistroJefeZona", label: "JEFE DE ZONA", icon: "supervisor_account", roles: [3] },
+      { path: "/PaginaRegistroCampania", label: "CAMPAÑAS", icon: "campaign", roles: [2, 3] },
+      { path: "/PaginaRegistroZona", label: "ZONAS", icon: "place", roles: [3] },
+      { path: "/PaginaRegistroMiembros", label: "MIEMBROS", icon: "group", roles: [1, 3] },
+      { path: "/PaginaRegistros", label: "REGISTROS", icon: "folder", roles: [1, 2, 3] },
+      { path: "/PaginaConsultaVacunas", label: "CONSULTA VACUNAS", icon: "search", roles: [1, 2, 3] },
+      /* { path: "/PaginaCorrecciones", label: "CORRECCIONES", icon: "edit", roles: [1, 2, 3] }, */
+    ];
+
+    // Filtrar rutas según el rol del usuario
+    const filteredRoutes = computed(() =>
+      menuRoutes.filter((route) => route.roles.includes(userRoleId))
+    );
 
     const toggleLeftDrawer = () => {
       leftDrawerOpen.value = !leftDrawerOpen.value;
     };
 
     const logout = () => {
-      localStorage.removeItem('authToken'); // Elimina el token de autenticación
-      localStorage.removeItem('userName'); // Elimina el nombre de usuario
-      localStorage.removeItem('userRoleId'); // Elimina el rol del usuario
-      window.location.href = '/login';      // Redirige a la página de login
-    };
-
-    const canAccess = (roles) => {
-      return roles.includes(userRoleId);
-    };
-
-    // Redirección después del login según el rol
-    const redirectToHome = () => {
-      switch (userRoleId) {
-        case '3': // Administrador
-        case '2': // Jefe de Zona
-          router.push('/'); // Redirige al inicio
-          break;
-        case '1': // Brigada
-          router.push('/PaginaRegistroMiembros'); // Redirige a Registro de Miembros
-          break;
-        default:
-          router.push('/login'); // Redirige al login si no se reconoce el rol
-      }
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userRoleId");
+      localStorage.removeItem("firstLogin");
+      window.location.href = "/login";
     };
 
     return {
@@ -156,13 +82,9 @@ export default {
       userName,
       toggleLeftDrawer,
       logout,
-      canAccess,
-      redirectToHome
+      filteredRoutes,
     };
   },
-  mounted() {
-    this.redirectToHome(); // Ejecuta la redirección al montar el componente
-  }
 };
 </script>
 
