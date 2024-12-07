@@ -138,7 +138,6 @@ const miembroData = ref({
 });
 
 const columns = [
-  { name: "id", label: "ID", align: "left", field: "id" },
   { name: "nombres", label: "Nombres", align: "left", field: row => row.miembro?.persona?.nombres || "" },
   { name: "apellidos", label: "Apellidos", align: "left", field: row => row.miembro?.persona?.apellidos || "" },
   { name: "ci", label: "CI", align: "left", field: row => row.miembro?.persona?.ci || "" },

@@ -137,8 +137,8 @@ import { ref, computed, onMounted, watch } from "vue";
 import { api } from "boot/axios";
 import Swal from "sweetalert2";
 import { useQuasar } from "quasar";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const $q = useQuasar();
 const campanias = ref([]);
@@ -514,19 +514,26 @@ const generatePDF = async (campania, zona, brigadasNuevas, brigadasCompletas) =>
     ]),
   ];
 
-  doc.autoTable({
-    startY: 55,
-    head: [["#", "Usuario", "Contraseña"]],
-    body: tableBody,
-    theme: "grid",
-    styles: {
-      fontSize: 10,
-    },
-    headStyles: {
-      fillColor: [0, 123, 255],
-      textColor: [255, 255, 255],
-    },
-  });
+  autoTable(doc, {
+  startY: 55, // Ajusta la posición de inicio según lo necesites
+  head: [["#", "Usuario", "Contraseña"]],
+  body: tableBody.map((row, index) => [index + 1, row[1], row[2]]), // Mapear filas y agregar índices
+  styles: {
+    fontSize: 10,
+    cellPadding: 5,
+    valign: "middle",
+    halign: "center",
+  },
+  headStyles: {
+    fillColor: [22, 160, 133], // Verde suave para encabezados
+    textColor: [255, 255, 255], // Blanco para el texto del encabezado
+    fontSize: 12,
+  },
+  alternateRowStyles: {
+    fillColor: [230, 240, 248], // Color suave para filas alternadas
+  },
+});
+
 
   // Pie de página
   const date = new Date().toLocaleDateString();

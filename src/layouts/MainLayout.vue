@@ -74,7 +74,7 @@ export default {
       localStorage.removeItem("userName");
       localStorage.removeItem("userRoleId");
       localStorage.removeItem("firstLogin");
-      window.location.href = "/login";
+      window.location.href = "/";
     };
 
     return {
