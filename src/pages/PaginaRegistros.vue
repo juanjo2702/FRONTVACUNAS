@@ -236,12 +236,17 @@
                     <!-- Motivo si no vacunado -->
                     <div v-if="mascota.vacunado === 0" class="q-mt-md">
                       <q-select v-model="mascota.motivo" label="Motivo de no vacunación" :options="[
-                        { label: 'Menor a 3 meses', value: 1 },
-                        { label: 'Gestación', value: 2 },
-                        { label: 'Enfermedad grave', value: 3 },
-                        { label: 'Ausente', value: 4 }
+                        { label: 'Casa cerrada', value: 1 },
+                        { label: 'Ausente', value: 2 },
+                        { label: 'Otro', value: 3 }
                       ]" emit-value map-options />
                     </div>
+
+                    <!-- Campo para descripción cuando el motivo es "Otro" -->
+                    <div v-if="mascota.vacunado === 0 && mascota.motivo === 3" class="q-mt-md">
+                      <q-input v-model="mascota.descripcion2" label="Descripción del motivo" type="textarea" filled />
+                    </div>
+
 
                     <!-- Botón para guardar cambios -->
                     <q-btn color="primary" label="Guardar" class="q-mt-md" @click="guardarHistorial(mascota)" />
@@ -824,9 +829,19 @@ const guardarHistorial = async (mascota) => {
       return;
     }
 
+    // Validación si el motivo es "Otro" (3) y no se ingresó descripción
+    if (mascota.vacunado === 0 && mascota.motivo === 3 && !mascota.descripcion2) {
+      $q.notify({
+        type: 'negative',
+        message: 'Debe ingresar una descripción para el motivo seleccionado.'
+      });
+      return;
+    }
+
     const data = {
       estado: mascota.vacunado, // 1 para vacunado, 0 para no vacunado
       motivo: mascota.vacunado === 0 ? mascota.motivo : null, // Ahora motivo es un entero
+      descripcion: mascota.motivo === 3 ? mascota.descripcion2 : null, // Ahora usamos descripcion2
       mascota_id: mascota.id,
       miembro_id: mascota.miembroSeleccionado.value || mascota.miembroSeleccionado, // Obtener el ID del miembro
       brigada_id: localStorage.getItem('brigadaUserId') // ID de la brigada

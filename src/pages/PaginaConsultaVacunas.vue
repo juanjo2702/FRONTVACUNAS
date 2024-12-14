@@ -89,6 +89,7 @@ export default {
     const propietarioSeleccionado = ref(null);
     const mascotas = ref([]);
 
+
     const buscarPropietarios = async () => {
       try {
         const response = await api.get('/buscar-personas', {
@@ -156,7 +157,13 @@ export default {
         format: [110, 85], // Tamaño ajustado
       });
 
-      // Fondo del carnet (anverso)
+      const agregarTextoConSalto = (texto, x, y, maxWidth = 90) => {
+        const lineas = doc.splitTextToSize(texto, maxWidth);
+        lineas.forEach((linea, index) => {
+          doc.text(linea, x, y + index * 4); // Salto de línea cada 4mm
+        });
+      };
+
       doc.setFillColor(242, 242, 242);
       doc.rect(0, 0, 110, 85, 'F');
 
@@ -164,94 +171,86 @@ export default {
       doc.setFillColor(0, 102, 204);
       doc.rect(0, 0, 110, 15, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(16);
       doc.text('Carnet de Mascota', 55, 10, { align: 'center' });
 
       try {
-        // Obtén la URL de la imagen o usa un placeholder
         const imgSrc = await obtenerImagen(mascota.fotoFrontal);
 
-        // Agrega la imagen al PDF
         doc.addImage(imgSrc, 'JPEG', 8, 20, 35, 35);
 
         // Información de la mascota
         doc.setTextColor(0, 0, 0);
-        doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.text(`Mascota:`, 50, 22);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Nombre: ${mascota.nombre}`, 50, 26);
-        doc.text(`Especie: ${mascota.especie}`, 50, 30);
-        doc.text(`Raza: ${mascota.raza}`, 50, 34);
-        doc.text(`Tamaño: ${mascota.tamanio}`, 50, 38);
+
+        agregarTextoConSalto(`Mascota:`, 50, 22);
+        agregarTextoConSalto(`Nombre: ${mascota.nombre}`, 50, 26);
+        agregarTextoConSalto(`Especie: ${mascota.especie}`, 50, 30);
+        agregarTextoConSalto(`Raza: ${mascota.raza}`, 50, 34);
+        agregarTextoConSalto(`Tamaño: ${mascota.tamanio}`, 50, 38);
 
         doc.setDrawColor(0, 102, 204);
         doc.line(45, 42, 100, 42);
 
         // Información del propietario
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Propietario:`, 50, 46);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${propietarioSeleccionado.value.nombres} ${propietarioSeleccionado.value.apellidos}`, 50, 50);
-        doc.text(`CI: ${propietarioSeleccionado.value.ci}`, 50, 54);
-        doc.text(`Teléfono: ${propietarioSeleccionado.value.telefono}`, 50, 58);
+        agregarTextoConSalto(`Propietario:`, 50, 46);
+        agregarTextoConSalto(`${propietarioSeleccionado.value.nombres} ${propietarioSeleccionado.value.apellidos}`, 50, 50);
+        agregarTextoConSalto(`CI: ${propietarioSeleccionado.value.ci}`, 50, 54);
+        agregarTextoConSalto(`Teléfono: ${propietarioSeleccionado.value.telefono}`, 50, 58);
 
         // Reverso - Historial de vacunas
         doc.addPage();
-
         doc.setFillColor(255, 255, 255);
         doc.rect(0, 0, 110, 85, 'F');
 
         doc.setFillColor(0, 102, 204);
         doc.rect(0, 0, 110, 15, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
         doc.setFontSize(16);
         doc.text('Historial de Vacunas', 55, 10, { align: 'center' });
 
         const historial = await obtenerHistorialVacunas(mascota.id);
 
         doc.setTextColor(0, 0, 0);
-        doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
 
         let yPosition = 20;
+        const motivoMap = {
+          1: 'Casa cerrada',
+          2: 'Ausente',
+          3: 'Otros',
+        };
+
         historial.forEach((registro, index) => {
-          // Verificar si la fecha está presente y válida
           const fechaValida = registro.created_at && !isNaN(new Date(registro.created_at));
           const fechaFormateada = fechaValida
-            ? registro.created_at.split('T')[0] // Obtiene solo la parte `YYYY-MM-DD`
+            ? registro.created_at.split('T')[0]
             : "Fecha inválida";
-          // Agregar información al PDF
-          doc.text(`${index + 1}. Estado: ${registro.estado === 1 ? 'Vacunado' : 'No Vacunado'}`, 8, yPosition);
-          doc.text(`Fecha vacunación: ${fechaFormateada}`, 8, yPosition + 4);
+
+          agregarTextoConSalto(`${index + 1}. Estado: ${registro.estado === 1 ? 'Vacunado' : 'No Vacunado'}`, 8, yPosition);
+          agregarTextoConSalto(`Fecha vacunación: ${fechaFormateada}`, 8, yPosition + 4);
 
           if (registro.motivo) {
-            const motivoMap = {
-              1: 'Menor a 3 meses',
-              2: 'Gestación',
-              3: 'Enfermedad grave',
-              4: 'Ausente',
-            };
-
-            doc.text(`Motivo: ${motivoMap[registro.motivo] || 'No especificado'}`, 8, yPosition + 8);
-            yPosition += 4; // Aumenta espacio si se agregó un motivo
+            agregarTextoConSalto(`Motivo: ${motivoMap[registro.motivo] || 'No especificado'}`, 8, yPosition + 8);
+            yPosition += 4;
           }
 
-          doc.text(`Campaña: ${registro.campania_nombre}`, 8, yPosition + 8);
-          yPosition += 16; // Espacio para el siguiente registro
+          if (registro.descripcion) {
+            agregarTextoConSalto(`Descripción: ${registro.descripcion}`, 8, yPosition + 8);
+            yPosition += 4;
+          }
+
+          agregarTextoConSalto(`Campaña: ${registro.campania_nombre}`, 8, yPosition + 8);
+          yPosition += 16;
         });
 
-        // Guarda el PDF
         doc.save(`Carnet_Mascota_${mascota.nombre}.pdf`);
       } catch (error) {
         console.error("Error generando el PDF:", error);
         alert('No se pudo generar el PDF, inténtalo nuevamente.');
       }
     };
-
-
 
 
     const obtenerRazaPorMascota = async (mascotaId) => {

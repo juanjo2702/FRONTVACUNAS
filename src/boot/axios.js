@@ -1,8 +1,10 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
-const api = axios.create({ baseURL: 'https://backvacunas.xpertiabo.com/api' })
-const storage = axios.create({ baseURL: 'https://backvacunas.xpertiabo.com/storage' })
+/* const api = axios.create({ baseURL: 'https://backvacunas.xpertiabo.com/api' })
+const storage = axios.create({ baseURL: 'https://backvacunas.xpertiabo.com/storage' }) */
+const api = axios.create({ baseURL: 'http://localhost:8000/api' })
+const storage = axios.create({ baseURL: 'http://localhost:8000/storage' })
 const customAxios = axios.create({
   baseURL: 'https://backvacunas.xpertiabo.com'
 });
