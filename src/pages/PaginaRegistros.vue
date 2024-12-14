@@ -142,10 +142,16 @@
                 <div class="col-xs-12 col-sm-6 col-md-4">
                   <q-input filled v-model="mascotaData.color" label="Color" />
                 </div>
-                <div class="col-xs-12 col-sm-6 col-md-4">
-                  <q-input filled v-model="mascotaData.rangoEdad" label="Edad (0-20 años)" type="number"
-                    :rules="[(val) => val >= 0 && val <= 15 || 'La edad debe estar entre 0 y 20 años']" lazy-rules
-                    required min="0" max="20" />
+                <!-- Campos para edad: años y meses -->
+                <div class="col-xs-12 col-sm-6 col-md-2">
+                  <q-input filled v-model.number="mascotaData.edadAnos" label="Años (1-20)" type="number"
+                    :rules="[(val) => val >= 1 && val <= 20 || 'La edad en años debe estar entre 1 y 20']" lazy-rules
+                    required min="1" max="20" />
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-2">
+                  <q-input filled v-model.number="mascotaData.edadMeses" label="Meses (0-11)" type="number"
+                    :rules="[(val) => val >= 0 && val <= 11 || 'La edad en meses debe estar entre 0 y 11']" lazy-rules
+                    required min="0" max="11" />
                 </div>
               </div>
 
@@ -364,7 +370,8 @@ const mascotaData = ref({
   genero: '',
   especie: '',
   color: '',
-  rangoEdad: '',
+  edadAnos: 0,
+  edadMeses: 0,
   tamanio: '',
   raza_id: '',  // Importante para asegurarnos de que esté el ID de raza, no el objeto
   fotoFrontal: null,
@@ -532,7 +539,8 @@ const resetFormMascota = () => {
     genero: '',
     especie: '',
     color: '',
-    rangoEdad: '',
+    edadAnos: 0,
+    edadMeses: 0,
     tamanio: '',
     raza_id: '',
     descripcion: ''  // Limpiar también la descripción
@@ -618,30 +626,26 @@ const submitFormPersona = async () => {
   }
 };
 
+// Cálculo de la fecha de nacimiento
+const calculateFechaNacimiento = () => {
+  const totalMeses = mascotaData.value.edadAnos * 12 + mascotaData.value.edadMeses;
+
+  // Obtener fecha actual de Bolivia (UTC-4)
+  const now = new Date();
+  now.setHours(now.getHours() - 4); // Ajuste manual a la zona horaria UTC-4
+
+  // Calcular fecha restando meses
+  const fechaNacimiento = new Date(now.setMonth(now.getMonth() - totalMeses));
+
+  return fechaNacimiento.toISOString().split('T')[0]; // Retorna en formato YYYY-MM-DD
+};
 
 const submitFormMascota = async (closeModal = true) => {
   // Verificar los datos antes de enviar
   console.log("Datos de mascota a enviar:", mascotaData.value);
 
-  // Validar que la edad esté entre 1 y 15
-  if (mascotaData.value.rangoEdad < 1 || mascotaData.value.rangoEdad > 15) {
-    Swal.fire('Error', 'La edad debe estar entre 1 y 15 años', 'error');
-    return;
-  }
-
-  // Obtener la fecha actual de Bolivia (zona horaria -04:00)
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const birthYear = currentYear - mascotaData.value.rangoEdad;
-
-  // Crear la fecha de nacimiento en formato YYYY-MM-DD
-  //const fechaNacimiento = ${ birthYear }-${ now.getMonth() + 1 } -${ now.getDate() };
-  const month = String(now.getMonth() + 1).padStart(2, '0');  // Mes con dos dígitos
-  const day = String(now.getDate()).padStart(2, '0');  // Día con dos dígitos
-  const fechaNacimiento = `${birthYear}-${month}-${day}`;  // Genera la fecha con el formato correcto
-
-  console.log("Fecha de nacimiento calculada:", fechaNacimiento);
-
+  const fechaNacimiento = calculateFechaNacimiento();
+  console.log('Fecha de nacimiento calculada:', fechaNacimiento);
   try {
     const formData = new FormData();
     formData.append('nombre', mascotaData.value.nombre);
@@ -729,7 +733,8 @@ const submitAndContinue = async () => {
   mascotaData.value.genero = '';
   mascotaData.value.especie = '';
   mascotaData.value.color = '';
-  mascotaData.value.rangoEdad = '';
+  mascotaData.value.edadAnos = 0;
+  mascotaData.value.edadMeses = 0;
   mascotaData.value.tamanio = '';
   mascotaData.value.raza_id = '';
   mascotaData.value.descripcion = '';
