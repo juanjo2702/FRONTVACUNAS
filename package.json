@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
-    "apexcharts": "^3.54.0",
+    "apexcharts": "^4.1.0",
     "axios": "^1.7.7",
     "date-fns": "^4.1.0",
     "dropify": "^0.2.2",

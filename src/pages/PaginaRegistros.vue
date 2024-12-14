@@ -14,7 +14,7 @@
           </q-input>
         </div>
       </div>
-      <q-table :rows="filteredPersonas" :columns="columns" row-key="id">
+      <q-table :rows="filteredPersonas" row-key="id" :columns="visibleColumns">
         <template v-slot:body-cell-foto="props">
           <q-td align="center">
             <span v-if="props.row && props.row.foto">
@@ -289,12 +289,15 @@ const personas = ref([]);
 const search = ref('');
 const columns = [
   { name: 'nombres_apellidos', label: 'Nombres y Apellidos', field: 'nombres_apellidos', align: 'center' },
-  { name: 'ci', label: 'CI', field: 'ci', align: 'center' },
+  { name: 'ci', label: 'CI', field: 'ci', align: 'center', visible: false },  // Columna oculta
   { name: 'telefono', label: 'Teléfono', field: 'telefono', align: 'center' },
-  { name: 'foto', label: 'Foto', field: 'foto', align: 'center', format: val => val || 'Sin imagen' },  // Foto por defecto si está vacía
+  { name: 'foto', label: 'Foto', field: 'foto', align: 'center', format: val => val || 'Sin imagen' },
   { name: 'registro', label: 'Registrar Mascota', field: 'registro', align: 'center', sortable: false },
-  { name: 'vacuna', label: 'Registrar Vacuna', field: 'vacuna', align: 'center', sortable: false }, // Nueva columna
+  { name: 'vacuna', label: 'Registrar Vacuna', field: 'vacuna', align: 'center', sortable: false },
 ];
+
+// Filtrar columnas visibles
+const visibleColumns = columns.filter(col => col.visible !== false);
 
 const filteredPersonas = computed(() => {
   if (!search.value) {
