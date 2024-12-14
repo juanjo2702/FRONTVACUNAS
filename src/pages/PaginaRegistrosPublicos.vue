@@ -1,21 +1,28 @@
 <template>
   <q-page padding>
-    <div class="q-pa-md">
-      <!-- Botón para abrir el modal -->
-      <q-btn label="Registrar Nueva Persona" color="primary" @click="openModalPersona" />
-      <div style="margin-top: 20px;"></div>
-
-      <div class="q-my-md row">
-        <div class="col">
-          <q-input v-model="search" label="Buscar..." outlined>
-            <template v-slot:append>
-              <q-icon name="search" />
-            </template>
-          </q-input>
+    <div class="q-pa-md background">
+      <div class="content-wrapper">
+        <!-- Mensajes de concientización -->
+        <div class="text-container">
+          <h1 class="text-primary text-center text-responsive">¡Registra a tus mascotas para protegerlas contra la
+            rabia!</h1>
+          <p class="text-body1 text-center text-grey-8">
+            <strong>El preregistro es clave para organizar campañas de vacunación más efectivas y proteger a tus
+              mascotas
+              y a tu
+              comunidad.</strong>
+          </p>
+          <p class="text-body2 text-center">
+            Una comunidad organizada y responsable puede prevenir brotes de enfermedades.
+            ¡Haz tu parte y regístrate hoy mismo!
+          </p>
+        </div>
+        <!-- Botón central para registrar -->
+        <div class="btn-container">
+          <q-btn label="Registrar Nueva Persona" color="primary" size="lg" push glossy icon="person_add"
+            @click="openModalPersona" />
         </div>
       </div>
-      <q-table :rows="filteredPersonas" :columns="columns" row-key="id">
-      </q-table>
 
       <!-- Modal con el formulario de registro de Persona -->
       <q-dialog v-model="isModalPersonaOpen" persistent>
@@ -82,7 +89,7 @@
             <div class="text-h6">REGISTRAR NUEVA MASCOTA</div>
           </q-card-section>
 
-          <q-separator></q-separator>
+          <q-separator />
 
           <q-card-section>
             <q-form ref="formMascota" @submit.prevent="submitFormMascota">
@@ -105,7 +112,6 @@
                   <q-select filled v-model="mascotaData.especie" :options="['Perro', 'Gato']" label="Especie"
                     @update:model-value="onEspecieChange" lazy-rules required />
                 </div>
-
               </div>
 
               <div class="row q-col-gutter-md q-mb-md">
@@ -115,14 +121,20 @@
                     hint="Seleccione una Raza" lazy-rules @filter="filterRazas" :disable="!mascotaData.especie"
                     :rules="[(val) => !!val || 'Seleccione una Raza']" />
                 </div>
-
                 <div class="col-xs-12 col-sm-6 col-md-4">
                   <q-input filled v-model="mascotaData.color" label="Color" />
                 </div>
-                <div class="col-xs-12 col-sm-6 col-md-4">
-                  <q-input filled v-model="mascotaData.rangoEdad" label="Edad (0-20 años)" type="number"
-                    :rules="[(val) => val >= 0 && val <= 15 || 'La edad debe estar entre 0 y 20 años']" lazy-rules
-                    required min="0" max="20" />
+
+                <!-- Campos para edad: años y meses -->
+                <div class="col-xs-12 col-sm-6 col-md-2">
+                  <q-input filled v-model.number="mascotaData.edadAnos" label="Años (1-20)" type="number"
+                    :rules="[(val) => val >= 1 && val <= 20 || 'La edad en años debe estar entre 1 y 20']" lazy-rules
+                    required min="1" max="20" />
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-2">
+                  <q-input filled v-model.number="mascotaData.edadMeses" label="Meses (0-11)" type="number"
+                    :rules="[(val) => val >= 0 && val <= 11 || 'La edad en meses debe estar entre 0 y 11']" lazy-rules
+                    required min="0" max="11" />
                 </div>
               </div>
 
@@ -137,20 +149,14 @@
                 </div>
               </div>
 
-              <!-- Campo para imagen frontal -->
+              <!-- Campo para imágenes -->
               <div class="col-xs-12 col-sm-6 col-md-4">
-                <div>
-                  <label for="fotoFrontal">Subir Imagen Frontal</label>
-                  <input type="file" class="dropify" id="fotoFrontal" accept="image/*;capture=camera" />
-                </div>
+                <label for="fotoFrontal">Subir Imagen Frontal</label>
+                <input type="file" class="dropify" id="fotoFrontal" accept="image/*;capture=camera" />
               </div>
-
-              <!-- Campo para imagen lateral -->
               <div class="col-xs-12 col-sm-6 col-md-4">
-                <div>
-                  <label for="fotoLateral">Subir Imagen Lateral</label>
-                  <input type="file" class="dropify" id="fotoLateral" accept="image/*;capture=camera" />
-                </div>
+                <label for="fotoLateral">Subir Imagen Lateral</label>
+                <input type="file" class="dropify" id="fotoLateral" accept="image/*;capture=camera" />
               </div>
 
               <div class="q-pa-md row justify-between">
@@ -158,11 +164,9 @@
                   <q-btn label="Registrar Mascota" color="teal" @click="submitAndContinueWithConfirmation" />
                 </div>
                 <div class="q-pa-md row justify-center">
-                  <q-btn label="Cerrar" color="negative" @click="isModalMascotaOpen = false"
-                    :disable="buttonsDisabled" />
+                  <q-btn label="Cerrar" color="negative" @click="isModalMascotaOpen = false" />
                 </div>
               </div>
-
             </q-form>
           </q-card-section>
         </q-card>
@@ -170,8 +174,6 @@
     </div>
   </q-page>
 </template>
-
-
 <script setup>
 import $ from 'jquery'; // Importa jQuery primero
 import { ref, nextTick, computed } from 'vue';
@@ -194,25 +196,6 @@ const submitAndClose = async () => {
 const $q = useQuasar();
 const mostrarBotonCancelar = ref(false);
 const personas = ref([]);
-const search = ref('');
-const columns = [
-  { name: 'nombres_apellidos', label: 'Nombres y Apellidos', field: 'nombres_apellidos', align: 'center' },
-];
-
-const filteredPersonas = computed(() => {
-  if (!search.value) {
-    return personas.value;
-  }
-  return personas.value.filter(persona => {
-    const searchTerm = search.value.toLowerCase();
-    return (
-      persona.nombres_apellidos.toLowerCase().includes(searchTerm) ||
-      persona.ci.toLowerCase().includes(searchTerm) ||
-      persona.telefono.toLowerCase().includes(searchTerm)
-    );
-  });
-});
-
 const isLoading = ref(true);
 
 const fetchPropietarios = async () => {
@@ -267,7 +250,8 @@ const mascotaData = ref({
   genero: '',
   especie: '',
   color: '',
-  rangoEdad: '',
+  edadAnos: 0,
+  edadMeses: 0,
   tamanio: '',
   raza_id: '',  // Importante para asegurarnos de que esté el ID de raza, no el objeto
   fotoFrontal: null,
@@ -435,7 +419,8 @@ const resetFormMascota = () => {
     genero: '',
     especie: '',
     color: '',
-    rangoEdad: '',
+    edadAnos: 0,
+    edadMeses: 0,
     tamanio: '',
     raza_id: '',
     descripcion: ''  // Limpiar también la descripción
@@ -521,29 +506,26 @@ const submitFormPersona = async () => {
   }
 };
 
+// Cálculo de la fecha de nacimiento
+const calculateFechaNacimiento = () => {
+  const totalMeses = mascotaData.value.edadAnos * 12 + mascotaData.value.edadMeses;
+
+  // Obtener fecha actual de Bolivia (UTC-4)
+  const now = new Date();
+  now.setHours(now.getHours() - 4); // Ajuste manual a la zona horaria UTC-4
+
+  // Calcular fecha restando meses
+  const fechaNacimiento = new Date(now.setMonth(now.getMonth() - totalMeses));
+
+  return fechaNacimiento.toISOString().split('T')[0]; // Retorna en formato YYYY-MM-DD
+};
 
 const submitFormMascota = async (closeModal = true) => {
   // Verificar los datos antes de enviar
   console.log("Datos de mascota a enviar:", mascotaData.value);
 
-  // Validar que la edad esté entre 1 y 15
-  if (mascotaData.value.rangoEdad < 1 || mascotaData.value.rangoEdad > 15) {
-    Swal.fire('Error', 'La edad debe estar entre 1 y 15 años', 'error');
-    return;
-  }
-
-  // Obtener la fecha actual de Bolivia (zona horaria -04:00)
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const birthYear = currentYear - mascotaData.value.rangoEdad;
-
-  // Crear la fecha de nacimiento en formato YYYY-MM-DD
-  //const fechaNacimiento = ${ birthYear }-${ now.getMonth() + 1 } -${ now.getDate() };
-  const month = String(now.getMonth() + 1).padStart(2, '0');  // Mes con dos dígitos
-  const day = String(now.getDate()).padStart(2, '0');  // Día con dos dígitos
-  const fechaNacimiento = `${birthYear}-${month}-${day}`;  // Genera la fecha con el formato correcto
-
-  console.log("Fecha de nacimiento calculada:", fechaNacimiento);
+  const fechaNacimiento = calculateFechaNacimiento();
+  console.log('Fecha de nacimiento calculada:', fechaNacimiento);
 
   try {
     const formData = new FormData();
@@ -632,7 +614,8 @@ const submitAndContinue = async () => {
   mascotaData.value.genero = '';
   mascotaData.value.especie = '';
   mascotaData.value.color = '';
-  mascotaData.value.rangoEdad = '';
+  mascotaData.value.edadAnos = 0;
+  mascotaData.value.edadMeses = 0;
   mascotaData.value.tamanio = '';
   mascotaData.value.raza_id = '';
   mascotaData.value.descripcion = '';
@@ -760,6 +743,22 @@ const submitAndContinueWithConfirmation = () => {
 
 </script>
 <style scoped>
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.8);
+  /* Fondo semitransparente */
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  opacity: 1;
+}
+
 #map {
   height: 300px;
   width: 100%;
@@ -777,6 +776,10 @@ const submitAndContinueWithConfirmation = () => {
 
 .dropify-wrapper {
   margin-bottom: 20px;
+}
+
+.q-btn {
+  font-size: 1.2rem;
 }
 
 .foto-mascota {
@@ -811,5 +814,40 @@ const submitAndContinueWithConfirmation = () => {
   /* Redondeo de bordes */
   margin-bottom: 10px;
   /* Espacio entre la imagen y el contenido */
+}
+
+.btn-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.text-container {
+  max-width: 500px;
+  margin-bottom: 20px;
+}
+
+.text-responsive {
+  font-size: 4rem;
+  /* Tamaño base para dispositivos grandes */
+}
+
+@media (max-width: 600px) {
+  .text-responsive {
+    font-size: 3rem;
+    /* Ajuste de tamaño en dispositivos pequeños */
+  }
+}
+
+.background {
+  background-image: url('/fondopublico.png');
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 1;
 }
 </style>

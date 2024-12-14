@@ -14,6 +14,13 @@ const routes = [
     ]
   },
   {
+    path: '/ConsultaVacuna',
+    component: () => import('layouts/RegistroLayout.vue'),
+    children: [
+      { path: '/ConsultaVacuna', component: () => import('pages/PaginaConsultaVacunasPublico.vue') }
+    ]
+  },
+  {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [

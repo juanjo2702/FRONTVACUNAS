@@ -168,11 +168,17 @@ const filteredZonas = ref([]); // Zonas filtradas para la campaña seleccionada
 
 const brigadesForm = ref(null);
 
+const formatFecha = (dateString) => {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year.slice(-2)}`;
+};
+
 // Definir columnas de la tabla
 const columns = [
   { name: "nombre", align: "left", label: "Nombre", field: "nombre", sortable: true },
-  { name: "fechaInicio", align: "center", label: "Fecha de Inicio", field: "fechaInicio", sortable: true },
-  { name: "fechaFinal", align: "center", label: "Fecha de Finalización", field: "fechaFinal", sortable: true },
+  { name: "fechaInicio", align: "center", label: "Fecha de Inicio", field: row => formatFecha(row.fechaInicio), sortable: true },
+  { name: "fechaFinal", align: "center", label: "Fecha de Finalización", field: row => formatFecha(row.fechaFinal), sortable: true },
   { name: "estado", align: "center", label: "Estado", field: "estado" },
   { name: "next-phase", align: "center", label: "Siguiente Fase", field: "next-phase" },
   { name: "asignar-centro", align: "center", label: "Asignar Centro de Salud", field: "asignar-centro" },
@@ -515,24 +521,24 @@ const generatePDF = async (campania, zona, brigadasNuevas, brigadasCompletas) =>
   ];
 
   autoTable(doc, {
-  startY: 55, // Ajusta la posición de inicio según lo necesites
-  head: [["#", "Usuario", "Contraseña"]],
-  body: tableBody.map((row, index) => [index + 1, row[1], row[2]]), // Mapear filas y agregar índices
-  styles: {
-    fontSize: 10,
-    cellPadding: 5,
-    valign: "middle",
-    halign: "center",
-  },
-  headStyles: {
-    fillColor: [22, 160, 133], // Verde suave para encabezados
-    textColor: [255, 255, 255], // Blanco para el texto del encabezado
-    fontSize: 12,
-  },
-  alternateRowStyles: {
-    fillColor: [230, 240, 248], // Color suave para filas alternadas
-  },
-});
+    startY: 55, // Ajusta la posición de inicio según lo necesites
+    head: [["#", "Usuario", "Contraseña"]],
+    body: tableBody.map((row, index) => [index + 1, row[1], row[2]]), // Mapear filas y agregar índices
+    styles: {
+      fontSize: 10,
+      cellPadding: 5,
+      valign: "middle",
+      halign: "center",
+    },
+    headStyles: {
+      fillColor: [22, 160, 133], // Verde suave para encabezados
+      textColor: [255, 255, 255], // Blanco para el texto del encabezado
+      fontSize: 12,
+    },
+    alternateRowStyles: {
+      fillColor: [230, 240, 248], // Color suave para filas alternadas
+    },
+  });
 
 
   // Pie de página
