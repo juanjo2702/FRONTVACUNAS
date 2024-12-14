@@ -171,7 +171,7 @@ const brigadesForm = ref(null);
 const formatFecha = (dateString) => {
   if (!dateString) return "";
   const [year, month, day] = dateString.split("-");
-  return `${day}/${month}/${year.slice(-2)}`;
+  return `${day}/${month}/${year}`;
 };
 
 // Definir columnas de la tabla

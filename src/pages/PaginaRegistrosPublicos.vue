@@ -4,17 +4,11 @@
       <div class="content-wrapper">
         <!-- Mensajes de concientización -->
         <div class="text-container">
-          <h1 class="text-primary text-center text-responsive">¡Registra a tus mascotas para protegerlas contra la
+          <h1 class="text-center text-responsive">¡Registra a tus mascotas para protegerlas contra la
             rabia!</h1>
-          <p class="text-body1 text-center text-grey-8">
-            <strong>El preregistro es clave para organizar campañas de vacunación más efectivas y proteger a tus
-              mascotas
-              y a tu
-              comunidad.</strong>
-          </p>
-          <p class="text-body2 text-center">
-            Una comunidad organizada y responsable puede prevenir brotes de enfermedades.
-            ¡Haz tu parte y regístrate hoy mismo!
+          <p class="text-body1 text-center text-grey-8 text-responsive">
+            <strong>"El preregistro es fundamental para organizar campañas de vacunación más efectivas, protegiendo así
+              a tus mascotas y a toda tu comunidad."</strong>
           </p>
         </div>
         <!-- Botón central para registrar -->
@@ -742,30 +736,38 @@ const submitAndContinueWithConfirmation = () => {
 };
 
 </script>
+
+
 <style scoped>
+/* Contenedor principal */
 .content-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  text-align: center;
-  padding: 20px;
   background-color: rgba(255, 255, 255, 0.8);
   /* Fondo semitransparente */
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 20px;
   max-width: 600px;
-  opacity: 1;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  /* Sombra */
+  text-align: center;
 }
 
+/* Mapa */
 #map {
   height: 300px;
   width: 100%;
 }
 
+/* Estilo para Dropify */
 .dropify {
   border: 2px dashed #00aaff;
+}
+
+.dropify-wrapper {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  /* Bordes redondeados */
+  overflow: hidden;
 }
 
 .absolute-top-right {
@@ -774,14 +776,51 @@ const submitAndContinueWithConfirmation = () => {
   right: 0;
 }
 
-.dropify-wrapper {
+/* Estilos para botones */
+.q-btn {
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+  /* Sombra para destacar */
+}
+
+.btn-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+/* Estilo para contenedor de texto */
+.text-container {
+  max-width: 500px;
   margin-bottom: 20px;
 }
 
-.q-btn {
-  font-size: 1.2rem;
+/* Títulos principales */
+.text-responsive {
+  font-size: 2.5rem;
+  /* Ajustado para evitar desbordes */
+  line-height: 1.2;
+  /* Espaciado entre líneas */
+  color: #1565c0;
+  /* Color azul */
+  margin-bottom: 16px;
+  word-wrap: break-word;
+  /* Permite que el texto se ajuste */
 }
 
+.text-body1 {
+  font-size: 1rem;
+}
+
+.text-body2 {
+  font-size: 0.9rem;
+  color: #616161;
+  /* Color gris */
+}
+
+/* Estilos para imágenes de mascotas */
 .foto-mascota {
   display: flex;
   justify-content: center;
@@ -794,51 +833,29 @@ const submitAndContinueWithConfirmation = () => {
 
 .q-td img {
   width: 80px;
-  /* Ancho estándar */
+  /* Tamaño estándar */
   height: 80px;
-  /* Altura estándar */
+  /* Tamaño estándar */
   object-fit: cover;
-  /* Mantiene el recorte adecuado */
+  /* Ajusta el contenido */
   border-radius: 5px;
-  /* Redondeo de bordes */
+  /* Bordes redondeados */
 }
 
 .foto-mascota img {
   width: 100px;
-  /* Ancho fijo */
+  /* Tamaño fijo */
   height: 100px;
-  /* Altura fija */
+  /* Tamaño fijo */
   object-fit: cover;
   /* Mantiene el recorte adecuado */
   border-radius: 10px;
-  /* Redondeo de bordes */
+  /* Bordes redondeados */
   margin-bottom: 10px;
-  /* Espacio entre la imagen y el contenido */
+  /* Espacio entre imágenes */
 }
 
-.btn-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-.text-container {
-  max-width: 500px;
-  margin-bottom: 20px;
-}
-
-.text-responsive {
-  font-size: 4rem;
-  /* Tamaño base para dispositivos grandes */
-}
-
-@media (max-width: 600px) {
-  .text-responsive {
-    font-size: 3rem;
-    /* Ajuste de tamaño en dispositivos pequeños */
-  }
-}
-
+/* Fondo general */
 .background {
   background-image: url('/fondopublico.png');
   background-size: cover;
@@ -848,6 +865,23 @@ const submitAndContinueWithConfirmation = () => {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  opacity: 1;
+}
+
+/* Responsividad */
+@media (max-width: 600px) {
+  .text-responsive {
+    font-size: 2.0rem;
+    /* Ajuste de tamaño en dispositivos pequeños */
+  }
+
+  .text-body1 {
+    font-size: 0.9rem;
+    /* Texto ajustado */
+  }
+
+  .q-btn {
+    font-size: 1rem;
+    /* Botón más pequeño */
+  }
 }
 </style>
