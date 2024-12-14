@@ -264,7 +264,7 @@ import { ref, nextTick } from 'vue';
 import { QPage, QInput, QBtn, QCard, QCardSection, QList, QItem, QItemSection, QItemLabel, QImg } from 'quasar';
 import axios from 'axios';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from "jspdf-autotable";
 import { api } from 'src/boot/axios'; // Ruta al archivo axios.js
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
