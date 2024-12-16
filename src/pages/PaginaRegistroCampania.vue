@@ -87,13 +87,16 @@
         <q-card-section>
           <q-form ref="healthCenterForm" @submit.prevent="submitHealthCenterForm">
             <q-select v-model="selectedCentro" :options="filteredCentros" option-value="id" option-label="centro"
-              label="Seleccionar Centro de Salud" outlined dense class="q-mb-md"
+              clearable label="Seleccionar Centro de Salud" outlined dense class="q-mb-md"
               :rules="[val => !formValidationActive.value || !!val || 'Debe seleccionar un centro']" use-input
               input-debounce="300" @filter="filterCentros" />
             <q-select v-model="selectedJefeZona" :options="filteredJefesZona" option-value="persona_id"
               option-label="nombreCompleto" label="Seleccionar Jefe de Centro" outlined dense class="q-mb-md"
               :rules="[val => !formValidationActive.value || !!val || 'Debe seleccionar un jefe de centro']" use-input
               input-debounce="300" @filter="filterJefesZona" />
+            <q-input v-model="informativo.municipio" label="Municipio" outlined dense readonly />
+            <q-input v-model="informativo.red" label="Red" outlined dense readonly />
+            <q-input v-model="informativo.departamento" label="Departamento" outlined dense readonly />
             <div class="row justify-between">
               <q-btn label="Limpiar Campos" flat color="warning" @click="clearHealthCenterForm" />
               <q-btn label="Salir" flat color="negative" @click="closeHealthCenterModal" />
@@ -119,6 +122,10 @@
               input-debounce="300" @filter="filterZonas" />
             <q-input v-model="numeroBrigadas" type="number" label="Número de Brigadas" outlined dense class="q-mb-md"
               :rules="[val => !formValidationActive.value || !!val || 'El número de brigadas debe ser mayor a 0']" />
+
+            <q-input v-model="brigadasInformativo.municipio" label="Municipio" outlined dense readonly />
+            <q-input v-model="brigadasInformativo.red" label="Red" outlined dense readonly />
+            <q-input v-model="brigadasInformativo.departamento" label="Departamento" outlined dense readonly />
             <div class="row justify-between">
               <q-btn label="Limpiar Campos" flat color="warning" @click="clearBrigadesForm" />
               <q-btn label="Cerrar" flat color="negative" @click="closeBrigadesModal" />
@@ -198,7 +205,7 @@ const fetchCampanias = async () => {
 // Cargar centros desde la API
 const fetchCentros = async () => {
   try {
-    const response = await api.get("/zonas");
+    const response = await api.get("/zonas/centros"); // Asegúrate que este endpoint es correcto
     centros.value = response.data.map((zona) => ({
       id: zona.id,
       centro: zona.centro,
@@ -207,7 +214,6 @@ const fetchCentros = async () => {
     console.error("Error al obtener centros:", error);
   }
 };
-
 // Cargar jefes de zona desde la API
 const fetchJefesZona = async () => {
   try {
@@ -242,6 +248,8 @@ const filteredCampanias = computed(() => {
   );
 });
 
+
+
 const filterCentros = (val, update) => {
   update(() => {
     const term = val.toLowerCase();
@@ -274,6 +282,53 @@ watch(selectedZona, (newVal) => {
     // Si necesitas limpiar datos relacionados:
     numeroBrigadas.value = null; // Resetear el número de brigadas si es necesario
   }
+});
+
+watch(selectedCentro, async (newVal) => {
+  if (newVal) {
+    try {
+      const response = await api.get(`/zonas/${newVal.id}/detalles`);
+      informativo.value.municipio = response.data.municipio;
+      informativo.value.red = response.data.red;
+      informativo.value.departamento = response.data.departamento;
+    } catch (error) {
+      console.error('Error al obtener detalles del centro:', error);
+    }
+  } else {
+    // Limpiar campos informativos si no hay selección
+    informativo.value.municipio = '';
+    informativo.value.red = '';
+    informativo.value.departamento = '';
+  }
+});
+
+const informativo = ref({
+  municipio: '',
+  red: '',
+  departamento: '',
+});
+
+watch(selectedZona, async (newVal) => {
+  if (newVal) {
+    try {
+      const response = await api.get(`/zonas/${newVal}/detalles`);
+      brigadasInformativo.value.municipio = response.data.municipio;
+      brigadasInformativo.value.red = response.data.red;
+      brigadasInformativo.value.departamento = response.data.departamento;
+    } catch (error) {
+      console.error("Error al obtener detalles de la zona:", error);
+    }
+  } else {
+    // Limpiar los campos informativos
+    brigadasInformativo.value.municipio = "";
+    brigadasInformativo.value.red = "";
+    brigadasInformativo.value.departamento = "";
+  }
+});
+const brigadasInformativo = ref({
+  municipio: "",
+  red: "",
+  departamento: "",
 });
 
 // Abrir y cerrar el modal
