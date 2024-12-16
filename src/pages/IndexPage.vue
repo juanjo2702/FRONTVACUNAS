@@ -339,12 +339,6 @@ const fetchDashboardData = async () => {
   }
 };
 
-
-
-
-
-
-
 // Ejecutar la función cuando el componente se monte
 onMounted(fetchDashboardData);
 </script>

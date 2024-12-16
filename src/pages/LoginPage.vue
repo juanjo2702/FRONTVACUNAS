@@ -95,14 +95,10 @@ export default {
       try {
         // Hacer login
         const response = await api.post('/login', loginData);
-        console.log(response.data); // Verificar el contenido de la respuesta del login
 
         if (response.data.success) {
           const userId = response.data.user.id;
-          const roleId = response.data.user?.rol_id; // Cambié `role_id` por `rol_id` según la estructura de la respuesta de Postman
-          // Obtiene el role_id del usuario autenticado
-          console.log("Role ID obtenido:", roleId);
-
+          const roleId = response.data.user?.rol_id;
 
           // Guardar token, nombre de usuario y role_id
           localStorage.setItem('authToken', response.data.token);
@@ -113,16 +109,11 @@ export default {
           const brigadaResponse = await api.get(`/brigadas/usuario/${userId}`);
 
           if (brigadaResponse.data.exists) {
-            const brigadaId = brigadaResponse.data.brigada_id; // API devuelve el ID de la brigada
+            const brigadaId = brigadaResponse.data.brigada_id;
             localStorage.setItem('brigadaUserId', brigadaId);
-            console.log('Usuario es parte de brigadas, ID de brigada guardado en localStorage:', brigadaId);
           } else {
-            console.log('Usuario no está en brigadas');
           }
 
-          console.log("Login exitoso, redirigiendo...");
-
-          // Redirigir según el role_id del usuario
           switch (parseInt(roleId)) {
             case 3: // Administrador
               router.push('/PaginaRegistroZona'); // Página para administrador

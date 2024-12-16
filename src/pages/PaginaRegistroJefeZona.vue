@@ -137,14 +137,10 @@ const onSubmit = async () => {
     rol_id: rolId.value, // rolId ya inicializado en el código
   };
 
-  console.log("Datos enviados al servidor:", payloadUsuario);
-
   try {
     // Crear usuario
     const usuarioResponse = await api.post('/usuarios', payloadUsuario);
     const usuarioId = usuarioResponse.data.id; // Captura el ID del usuario creado
-
-    console.log("Usuario creado con ID:", usuarioId);
 
     // Crear persona vinculada al usuario
     const payloadPersona = {
@@ -167,7 +163,6 @@ const onSubmit = async () => {
     onReset();
     fetchPersonas(); // Actualizar lista de personas
   } catch (error) {
-    console.error("Error al registrar:", error.response?.data || error.message);
     $q.notify({
       color: "red-5",
       textColor: "white",
@@ -204,7 +199,6 @@ const fetchUsuarios = async () => {
     console.log("Usuarios obtenidos:", response.data);
     // Puedes manejar la lista de usuarios aquí si es necesario
   } catch (error) {
-    console.error("Error al obtener usuarios:", error.response?.data || error.message);
   }
 };
 
@@ -222,7 +216,6 @@ const fetchPersonas = async () => {
       icon: "error",
       message: "Error al obtener las personas."
     });
-    console.error(error);
   }
 };
 
@@ -268,7 +261,6 @@ const editPersona = async (row) => {
       icon: 'error',
       message: 'Error al cargar los datos para editar.',
     });
-    console.error(error);
   }
 };
 
@@ -321,7 +313,6 @@ const updateData = async () => {
       icon: "error",
       message: "Error al actualizar los datos.",
     });
-    console.error("Error al actualizar los datos:", error);
   }
 };
 </script>

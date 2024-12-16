@@ -161,9 +161,7 @@ const fetchParticipaciones = async () => {
       ...item,
       miembro: item.miembro || { persona: { nombres: "", apellidos: "", ci: "", telefono: "" } }, // Asegura que todos los datos existen
     }));
-    console.log("Datos de participaciones procesados:", participaciones.value);
   } catch (error) {
-    console.error("Error cargando participaciones:", error);
     Swal.fire("Error", "Hubo un problema al cargar las participaciones.", "error");
   }
 };
@@ -204,7 +202,6 @@ const searchPerson = async () => {
 
         isMember.value = !!miembroResponse.data; // Es miembro si la respuesta contiene datos
       } catch (memberError) {
-        console.warn("La persona no es miembro:", memberError.response?.data || memberError.message);
         isMember.value = false;
       }
     } else {
@@ -213,7 +210,6 @@ const searchPerson = async () => {
       isMember.value = false;
     }
   } catch (error) {
-    console.error("Error buscando persona:", error.response?.data || error.message);
 
     selectedPerson.value = null;
     selectedPersonLabel.value = "";
@@ -249,8 +245,6 @@ const assignPerson = async () => {
       brigada_id: brigadaUserId, // ID de la brigada
     };
 
-    console.log("Registrando participación con datos:", participacionData);
-
     // Enviar solicitud al backend
     const response = await api.post(`/participacions`, participacionData);
 
@@ -262,7 +256,6 @@ const assignPerson = async () => {
     // Mostrar mensaje de éxito
     Swal.fire("Éxito", "Se ha registrado correctamente la participación.", "success");
   } catch (error) {
-    console.error("Error registrando participación:", error.response?.data || error.message);
     Swal.fire("Error", "Hubo un problema al registrar la participación.", "error");
   }
 };
@@ -292,9 +285,7 @@ const searchAndRegisterParticipation = async () => {
     });
 
     Swal.fire("Éxito", "Participación registrada con éxito.", "success");
-    console.log("Participación:", participacionResponse.data);
   } catch (error) {
-    console.error("Error:", error);
     Swal.fire("Error", "Hubo un problema con el registro.", "error");
   }
 };
@@ -302,9 +293,6 @@ const searchAndRegisterParticipation = async () => {
 // Función para registrar Persona y Miembro
 const submitForm = async () => {
   try {
-    // Log de los datos de la persona
-    console.log("Datos de la persona a enviar:", personaData.value);
-
     // Registrar Persona
     const personaResponse = await api.post('/personas', personaData.value);
 
@@ -314,12 +302,8 @@ const submitForm = async () => {
     if (!personaId) {
       throw new Error('No se pudo obtener el ID de la persona');
     }
-
-    console.log("Persona registrada con éxito, ID:", personaId);
-
     // Asignar el ID de la persona al miembroData
     miembroData.value.persona_id = personaId;
-    console.log("ID de persona asignado a miembroData:", miembroData.value.persona_id);
 
     // Registrar Miembro
     const formData = new FormData();
@@ -331,16 +315,11 @@ const submitForm = async () => {
 
     if (fotoAnverso) {
       formData.append('fotoAnverso', fotoAnverso);
-      console.log("Anverso del CI seleccionado:", fotoAnverso);
     }
 
     if (fotoReverso) {
       formData.append('fotoReverso', fotoReverso);
-      console.log("Reverso del CI seleccionado:", fotoReverso);
     }
-
-    // Log de los datos del miembro que se están enviando
-    console.log("Datos del miembro a enviar (FormData):", formData);
 
     // Enviar al backend
     const miembroResponse = await api.post('/miembros', formData, {
@@ -356,8 +335,6 @@ const submitForm = async () => {
       throw new Error('No se pudo obtener el ID del miembro registrado');
     }
 
-    console.log("Miembro registrado con éxito, ID:", miembroId);
-
     // Después de registrar el miembro, registrar la participación
     let brigadaUserId = localStorage.getItem('brigadaUserId');
 
@@ -368,16 +345,11 @@ const submitForm = async () => {
       throw new Error('El brigadaUserId no es un número válido');
     }
 
-    console.log('Brigada ID:', brigadaUserId);
-
     // Registrar la participación en la tabla participaciones
     const participacionData = {
       miembro_id: miembroId,  // Usar el ID correcto del miembro registrado
       brigada_id: brigadaUserId  // Asegurarse de que el brigada_id sea un número
     };
-
-    // Asegúrate de que participacionData tiene los IDs correctos
-    console.log('Datos de participación a enviar:', participacionData);
 
     const participacionResponse = await api.post('/participacions', participacionData);
     await fetchParticipaciones();
@@ -388,9 +360,7 @@ const submitForm = async () => {
     resetForm(); // Resetear el formulario
   } catch (error) {
     if (error.response) {
-      console.error('Error en la respuesta del servidor:', error.response.data);
     } else {
-      console.error('Error en la solicitud:', error);
     }
     Swal.fire('Error', 'Hubo un problema al registrar el miembro: ' + error.message, 'error');
   }

@@ -114,7 +114,6 @@ export default {
         propietarioSeleccionado.value = null;
         mascotas.value = [];
       } catch (error) {
-        console.error("Error buscando propietarios:", error);
         propietarios.value = [];
       }
     };
@@ -130,7 +129,6 @@ export default {
           const response = await api.get(`/propietario/${propietarioSeleccionado.value.id}/mascotas`);
           mascotas.value = response.data;
         } catch (error) {
-          console.error("Error obteniendo mascotas:", error);
         }
         obtenerMiembrosBrigada();
       }
@@ -143,7 +141,6 @@ export default {
         const response = await api.get(`/brigadas/${brigadaId}/miembros`);
         miembrosBrigada.value = response.data;
       } catch (error) {
-        console.error("Error al obtener miembros de la brigada:", error);
       }
     };
 
@@ -157,8 +154,6 @@ export default {
           miembro_id: mascota.miembroSeleccionado.value || mascota.miembroSeleccionado, // Asegúrate de obtener solo el valor del ID
           brigada_id: localStorage.getItem('brigadaUserId') // Enviar la brigada_id desde el localStorage
         };
-
-        console.log("Datos enviados al backend:", data);
 
         // Enviar los datos al backend
         const response = await api.post('/historiavacunas', data);
@@ -174,7 +169,6 @@ export default {
           type: 'negative',
           message: 'Error al guardar el historial de vacunación.'
         });
-        console.error("Error:", error);
       }
     };
 

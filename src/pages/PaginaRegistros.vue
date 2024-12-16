@@ -335,7 +335,6 @@ const fetchPropietarios = async () => {
     }));
     isLoading.value = false;  // Indicar que la carga ha terminado
   } catch (error) {
-    console.error('Error fetching propietarios:', error);
   }
 };
 const props = defineProps({
@@ -347,11 +346,9 @@ const props = defineProps({
 
 const getStorageUrl = (path) => {
   if (!path) {
-    console.error('La propiedad foto no está definida:', path);  // Asegúrate de que el path esté definido
     return '';
   }
   const url = `${customAxios.defaults.baseURL}${path}`;
-  console.log('URL de la imagen generada:', url);  // Revisa que la URL esté bien formada
   return url;
 };
 const personaData = ref({
@@ -554,8 +551,6 @@ const resetFormMascota = () => {
 };
 
 const submitFormPersona = async () => {
-  console.log("Intentando registrar persona y propietario...");
-  console.log("Datos de persona a enviar:", personaData.value); // Agrega este log para revisar los datos
 
   try {
     // Crear un nuevo objeto FormData solo para la persona
@@ -586,7 +581,6 @@ const submitFormPersona = async () => {
     // Capturar la imagen del propietario si se ha seleccionado
     const fotoPropietario = document.getElementById('foto').files[0];
     if (!fotoPropietario) {
-      console.error("No file selected for upload");
     } else {
       formDataPropietario.append('foto', fotoPropietario); // Añadir la imagen al FormData de la persona
     }
@@ -617,11 +611,8 @@ const submitFormPersona = async () => {
     closeModalPersona();
   } catch (error) {
     if (error.response) {
-      console.error('Error en la respuesta del servidor:', error.response.data); // Revisa este error detalladamente
     } else if (error.request) {
-      console.error('No hubo respuesta del servidor:', error.request);
     } else {
-      console.error('Error al configurar la solicitud:', error.message);
     }
     $q.notify({
       type: 'negative',
@@ -647,10 +638,8 @@ const calculateFechaNacimiento = () => {
 
 const submitFormMascota = async (closeModal = true) => {
   // Verificar los datos antes de enviar
-  console.log("Datos de mascota a enviar:", mascotaData.value);
 
   const fechaNacimiento = calculateFechaNacimiento();
-  console.log('Fecha de nacimiento calculada:', fechaNacimiento);
   try {
     const formData = new FormData();
     formData.append('nombre', mascotaData.value.nombre);
@@ -679,14 +668,10 @@ const submitFormMascota = async (closeModal = true) => {
       formData.append('fotoLateral', lateralImage);  // Nombre del campo en FormData: 'fotoLateral'
     }
 
-
-    console.log("Datos enviados en FormData:", formData);
-
     const mascotaResponse = await api.post('/mascotas', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
-    console.log("Mascota registrada con éxito:", mascotaResponse.data);
     $q.notify({
       type: 'positive',
       message: 'Mascota registrada correctamente',
@@ -710,11 +695,8 @@ const submitFormMascota = async (closeModal = true) => {
     }
   } catch (error) {
     if (error.response) {
-      console.error("Error en la respuesta del servidor:", error.response.data);
     } else if (error.request) {
-      console.error("No hubo respuesta del servidor:", error.request);
     } else {
-      console.error("Error al configurar la solicitud:", error.message);
     }
     $q.notify({
       type: 'negative',
@@ -758,7 +740,6 @@ const fetchRazas = async (tipo) => {
     razas.value = response.data;
     filteredRazas.value = razas.value;
   } catch (error) {
-    console.error("Error al cargar las razas:", error);
   }
 };
 
@@ -799,7 +780,6 @@ const filterRazas = (val, update) => {
 const isModalVacunacionOpen = ref(false);
 
 const openModalVacunacion = () => {
-  console.log("Abriendo modal de vacunación...");
   isModalVacunacionOpen.value = true;
 };
 
@@ -819,7 +799,6 @@ const obtenerMiembrosBrigada = async () => {
     const response = await api.get(`/brigadas/${brigadaId}/miembros`);
     miembrosBrigada.value = response.data;
   } catch (error) {
-    console.error("Error al obtener miembros de la brigada:", error);
   }
 };
 
@@ -852,8 +831,6 @@ const guardarHistorial = async (mascota) => {
       brigada_id: localStorage.getItem('brigadaUserId') // ID de la brigada
     };
 
-    console.log("Datos enviados al backend:", data);
-
     // Enviar los datos al backend
     const response = await api.post('/historiavacunas', data);
 
@@ -868,7 +845,6 @@ const guardarHistorial = async (mascota) => {
       type: 'negative',
       message: 'Error al guardar el historial de vacunación.'
     });
-    console.error("Error:", error);
   }
 };
 
@@ -878,12 +854,10 @@ const mostrarMascotasDirectamente = async () => {
     const propietarioId = mascotaData.value.propietario_id;
     const response = await api.get(`/propietarios/${propietarioId}/mascotas`);
     closeModalMascota();
-    console.log('Mascotas cargadas:', response.data);
     obtenerMiembrosBrigada();
     mascotas.value = response.data;
     openModalVacunacion();
   } catch (error) {
-    console.error("Error al obtener las mascotas del propietario:", error);
   }
 };
 
@@ -894,8 +868,6 @@ const openModalVacunaDirectamente = async (row) => {
   try {
     const propietarioId = row.propietario_id; // ID del propietario seleccionado
     const response = await api.get(`/propietarios/${propietarioId}/mascotas`);
-
-    console.log('Mascotas cargadas:', response.data);
     mascotas.value = response.data; // Asigna las mascotas al modal
     obtenerMiembrosBrigada(); // Llamar a la función que carga los miembros de brigada
     openModalVacunacion(); // Abre el modal de historial de vacunación

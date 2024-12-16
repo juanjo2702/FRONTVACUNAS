@@ -198,7 +198,6 @@ const fetchCampanias = async () => {
     const response = await api.get("/campanias");
     campanias.value = response.data.sort((a, b) => b.id - a.id); // Orden descendente
   } catch (error) {
-    console.error("Error al obtener campañas:", error);
   }
 };
 
@@ -211,7 +210,6 @@ const fetchCentros = async () => {
       centro: zona.centro,
     }));
   } catch (error) {
-    console.error("Error al obtener centros:", error);
   }
 };
 // Cargar jefes de zona desde la API
@@ -223,10 +221,7 @@ const fetchJefesZona = async () => {
       usuario_id: jefe.usuario_id, // ID del usuario
       nombreCompleto: jefe.nombreCompleto, // Nombre completo
     }));
-
-    console.log("Jefes de Zona cargados:", jefesZona.value); // Depuración
   } catch (error) {
-    console.error("Error al obtener jefes de zona:", error);
     $q.notify({
       type: "negative",
       message: "Error al cargar los jefes de zona.",
@@ -278,7 +273,6 @@ watch(jefesZona, (newVal) => {
 
 watch(selectedZona, (newVal) => {
   if (newVal === null) {
-    console.log("Campo de zona limpiado");
     // Si necesitas limpiar datos relacionados:
     numeroBrigadas.value = null; // Resetear el número de brigadas si es necesario
   }
@@ -292,7 +286,6 @@ watch(selectedCentro, async (newVal) => {
       informativo.value.red = response.data.red;
       informativo.value.departamento = response.data.departamento;
     } catch (error) {
-      console.error('Error al obtener detalles del centro:', error);
     }
   } else {
     // Limpiar campos informativos si no hay selección
@@ -316,7 +309,6 @@ watch(selectedZona, async (newVal) => {
       brigadasInformativo.value.red = response.data.red;
       brigadasInformativo.value.departamento = response.data.departamento;
     } catch (error) {
-      console.error("Error al obtener detalles de la zona:", error);
     }
   } else {
     // Limpiar los campos informativos
@@ -372,9 +364,6 @@ const submitHealthCenterForm = async () => {
       zona_id: selectedCentro.value.id,    // Extraer el ID del centro seleccionado
       persona_id: selectedJefeZona.value.persona_id, // Extraer el persona_id del jefe de zona seleccionado
     };
-
-    console.log("Datos que se envían al backend:", payload); // Verificar el payload corregido
-
     // Enviar los datos al backend
     await api.post("/alcances", payload);
 
@@ -398,7 +387,6 @@ const submitHealthCenterForm = async () => {
         position: "top",
       });
     } else {
-      console.error("Error al guardar asignación:", error.response?.data || error.message);
       $q.notify({
         type: "negative",
         message: "Error al guardar asignación.",
@@ -436,7 +424,6 @@ const nextPhase = async (campania, newEstado) => {
     await fetchCampanias();
     $q.notify({ type: "positive", message: "Fase actualizada correctamente.", position: "top" });
   } catch (error) {
-    console.error("Error al actualizar fase:", error);
     $q.notify({ type: "negative", message: "Error al actualizar fase.", position: "top" });
   }
 };
@@ -449,7 +436,6 @@ const submitForm = async () => {
     $q.notify({ type: "positive", message: "Campaña registrada exitosamente.", position: "top" });
     closeModal();
   } catch (error) {
-    console.error("Error al registrar campaña:", error);
     $q.notify({ type: "negative", message: "Error al registrar campaña.", position: "top" });
   }
 };
@@ -471,14 +457,12 @@ const closeBrigadesModal = () => {
 const fetchZonasForCampania = async (campaniaId) => {
   try {
     const response = await api.get(`/alcances/campania/${campaniaId}`);
-    console.log("Zonas recibidas del backend:", response.data); // Agregado para verificar
 
     filteredZonas.value = response.data.map((alcance) => ({
       id: alcance.zona.id,    // ID de la zona
       centro: alcance.zona.centro, // Nombre del centro
     }));
   } catch (error) {
-    console.error("Error al obtener zonas para la campaña:", error);
     $q.notify({
       type: "negative",
       message: "Error al cargar las zonas asociadas a la campaña.",
@@ -515,8 +499,6 @@ const submitBrigadesForm = async () => {
       num_brigadas: numeroBrigadas.value, // Número de brigadas a generar
     };
 
-    console.log("Datos enviados al backend:", payload); // Agregado para depuración
-
     // Enviar datos al backend
     const response = await api.post("/brigadas/generar", payload);
 
@@ -525,8 +507,6 @@ const submitBrigadesForm = async () => {
       message: "Brigadas generadas correctamente.",
       position: "top",
     });
-
-    console.log("Brigadas generadas:", response.data.brigadas);
 
     // Generar el PDF con los datos de brigadas
     const campania = activeCampania.value;
@@ -542,7 +522,6 @@ const submitBrigadesForm = async () => {
     // Limpiar campos y quitar alertas
     formValidationActive.value = false;
   } catch (error) {
-    console.error("Error al generar brigadas:", error.response?.data || error.message);
     $q.notify({
       type: "negative",
       message: "Error al generar brigadas. Verifique los datos e intente de nuevo.",

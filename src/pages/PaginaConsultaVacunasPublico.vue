@@ -98,7 +98,6 @@ export default {
         propietarioSeleccionado.value = null;
         mascotas.value = [];
       } catch (error) {
-        console.error("Error buscando propietarios:", error);
         propietarios.value = [];
       }
     };
@@ -113,7 +112,6 @@ export default {
         const response = await $storage.get(`/${fotoFrontal}`, { responseType: 'blob' });
         return URL.createObjectURL(response.data); // Convierte el blob en una URL usable por el navegador
       } catch (error) {
-        console.error("Error obteniendo la imagen:", error);
         return 'https://via.placeholder.com/150'; // Retorna un placeholder si ocurre un error
       }
     };
@@ -122,10 +120,8 @@ export default {
     const obtenerHistorialVacunas = async (mascotaId) => {
       try {
         const response = await api.get(`/mascota/${mascotaId}/historial-vacunas`);
-        console.log('Historial recibido:', response.data);
         return response.data;
       } catch (error) {
-        console.error('Error al obtener el historial de vacunación:', error);
         return [];
       }
     };
@@ -142,9 +138,7 @@ export default {
             const razaResponse = await api.get(`/mascota/${mascota.id}/raza`);
             mascota.raza = razaResponse.data.raza; // Asignamos la raza a cada mascota
           }
-          console.log(mascotas.value); // Verifica que "raza" y "tamaño" estén presentes
         } catch (error) {
-          console.error("Error obteniendo mascotas:", error);
         }
       }
     };
@@ -246,7 +240,6 @@ export default {
         // Guarda el PDF
         doc.save(`Carnet_Mascota_${mascota.nombre}.pdf`);
       } catch (error) {
-        console.error("Error generando el PDF:", error);
         alert('No se pudo generar el PDF, inténtalo nuevamente.');
       }
     };
@@ -259,9 +252,7 @@ export default {
         // Usa la instancia `api` para obtener la raza de la mascota
         const response = await api.get(`/mascota/${mascotaId}/raza`);
         const raza = response.data.raza;
-        console.log(`La raza de la mascota es: ${raza}`);
       } catch (error) {
-        console.error("Error obteniendo la raza de la mascota:", error);
       }
     };
     const obtenerImagen = async (ruta) => {
@@ -269,7 +260,6 @@ export default {
         const response = await api.get(`/storage/${ruta}`, { responseType: 'blob' });
         return URL.createObjectURL(response.data); // Devuelve la URL para usarla en la imagen
       } catch (error) {
-        console.error("Error obteniendo la imagen:", error);
         return '/storage/placeholder.png'; // Imagen de respaldo en caso de error
       }
     };

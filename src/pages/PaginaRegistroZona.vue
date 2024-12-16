@@ -64,7 +64,6 @@ const fetchDepartamentos = async () => {
       value: dep.id,
     }));
   } catch (error) {
-    console.error("Error al cargar departamentos:", error);
   }
 };
 
@@ -80,7 +79,6 @@ const fetchRedes = async () => {
       value: red.id,
     }));
   } catch (error) {
-    console.error("Error al cargar redes:", error);
   }
 };
 
@@ -95,7 +93,6 @@ const fetchMunicipios = async () => {
       value: mun.id,
     }));
   } catch (error) {
-    console.error("Error al cargar municipios:", error);
   }
 };
 
@@ -106,7 +103,6 @@ const fetchZonas = async () => {
     const response = await api.get(`/zonas?municipio_id=${selectedMunicipio.value}`);
     zonas.value = response.data;
   } catch (error) {
-    console.error("Error al cargar zonas:", error);
   }
 };
 
