@@ -307,6 +307,7 @@ const columns = [
   { name: 'vacuna', label: 'Registrar Vacuna', field: 'vacuna', align: 'center', sortable: false }, // Nueva columna
 ];
 
+
 const filteredPersonas = computed(() => {
   if (!search.value) {
     return personas.value;
@@ -314,9 +315,9 @@ const filteredPersonas = computed(() => {
   return personas.value.filter(persona => {
     const searchTerm = search.value.toLowerCase();
     return (
-      persona.nombres_apellidos.toLowerCase().includes(searchTerm) ||
-      persona.ci.toLowerCase().includes(searchTerm) ||
-      persona.telefono.toLowerCase().includes(searchTerm)
+      (persona.nombres_apellidos?.toLowerCase().includes(searchTerm) || false) ||
+      (persona.ci?.toLowerCase().includes(searchTerm) || false) ||
+      (persona.telefono?.toLowerCase().includes(searchTerm) || false)
     );
   });
 });

@@ -57,6 +57,9 @@ export default {
       { path: "/PaginaRegistroMiembros", label: "MIEMBROS", icon: "group", roles: [1, 3] },
       { path: "/PaginaRegistros", label: "REGISTROS", icon: "folder", roles: [1, 2, 3] },
       { path: "/PaginaConsultaVacunas", label: "CONSULTA VACUNAS", icon: "search", roles: [1, 2, 3] },
+      { path: "/PaginaMapaNoVacunados", label: "MAPA NO VACUNADOS", icon: "map", roles: [1, 2, 3] },
+      { path: "/PaginaBusquedaGeografica", label: "BUSCAR POR UBICACIÓN", icon: "my_location", roles: [1, 2, 3] },
+      { path: "/ReporteBrigadas", label: "REPORTE BRIGADAS", icon: "summarize", roles: [1, 2, 3] },
       /* { path: "/PaginaCorrecciones", label: "CORRECCIONES", icon: "edit", roles: [1, 2, 3] }, */
     ];
 
