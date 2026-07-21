@@ -19,6 +19,7 @@
 
 <script setup>
 import { defineProps } from 'vue';
+import { customAxios } from 'boot/axios';
 
 // Recibe la lista de personas desde el componente padre (PaginaRegistros.vue)
 const props = defineProps({
@@ -38,7 +39,7 @@ const columns = [
 ];
 
 // Función para obtener la URL de la imagen
-const getStorageUrl = (path) => `http://localhost:8000${path}`;
+const getStorageUrl = (path) => `${customAxios.defaults.baseURL}${path}`;
 
 // Métodos de editar y eliminar
 const editPersona = (persona) => {

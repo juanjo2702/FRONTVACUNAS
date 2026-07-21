@@ -1,17 +1,14 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
-const api = axios.create({ baseURL: 'http://127.0.0.1:8000/api' })
-const storage = axios.create({ baseURL: 'http://127.0.0.1:8000/storage' })
-const customAxios = axios.create({
-  baseURL: 'http://127.0.0.1:8000'
-});
+const isDev = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const backendBaseURL = isDev ? 'http://127.0.0.1:8000' : 'https://api.vacunas.xpertiaplus.com';
 
-/* const api = axios.create({ baseURL: 'http://localhost:8000/api', withCredentials: true })
-const storage = axios.create({ baseURL: 'http://localhost:8000/storage' })
+const api = axios.create({ baseURL: `${backendBaseURL}/api` })
+const storage = axios.create({ baseURL: `${backendBaseURL}/storage` })
 const customAxios = axios.create({
-  baseURL: 'https://backvacunas.xpertiabo.com'
-}); */
+  baseURL: backendBaseURL
+});
 
 export default boot(({ app }) => {
   app.config.globalProperties.$axios = axios

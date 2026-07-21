@@ -1,7 +1,7 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/xpertiab/public_html/frontvacunas.xpertiabo.com/
+    - export DEPLOYPATH=/home/xpertiap/vacunas.xpertiaplus.com/
     - echo "Desplegando frontend en $DEPLOYPATH"
-    - /bin/cp -r ./build/* $DEPLOYPATH
+    - /bin/cp -r ./dist/spa/* $DEPLOYPATH
     - echo "Frontend desplegado exitosamente en $DEPLOYPATH"
