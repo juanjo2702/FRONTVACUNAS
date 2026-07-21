@@ -116,13 +116,13 @@ export default {
 
           switch (parseInt(roleId)) {
             case 3: // Administrador
-              router.push('/PaginaRegistroZona'); // Página para administrador
+              router.push('/'); // Página para administrador
               break;
             case 2: // Jefe de Zona
-              router.push('/PaginaRegistroJefeZona'); // Página para jefe de zona
+              router.push('/'); // Página para jefe de zona
               break;
             case 1: // Brigada
-              router.push('/PaginaConsultaVacunas'); // Página para brigada
+              router.push('/PaginaRegistroMiembros'); // Página para brigada
               break;
             default:
               $q.notify({

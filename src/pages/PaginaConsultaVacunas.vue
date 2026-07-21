@@ -1,96 +1,240 @@
 <template>
-  <q-page class="q-pa-md">
-    <!-- Buscador de Propietario -->
-    <div class="q-gutter-md q-col-gutter-md q-mt-md buscador">
-      <q-input filled v-model="search" label="Buscar propietario" />
-      <q-btn icon="search" color="primary" @click="buscarPropietarios" flat round />
-    </div>
+  <q-page class="q-pa-md bg-grey-1">
+    <!-- Encabezado con título -->
+    <div class="text-h5 text-primary q-mb-md">Búsqueda de Propietarios y Mascotas</div>
 
-    <div v-if="propietarios.length > 0" class="q-mt-md">
-      <q-list bordered padding>
-        <q-item v-for="propietario in propietarios" :key="propietario.id" clickable
-          @click="seleccionarPropietario(propietario)">
-          <q-item-section>
-            <q-item-label>{{ propietario.nombres }} {{ propietario.apellidos }} </q-item-label>
-            <q-item-label caption>CI: {{ propietario.ci }} - Teléfono: {{ propietario.telefono
-              }}</q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </div>
-
-    <!-- Perfil del Propietario Seleccionado -->
-    <div v-if="propietarioSeleccionado" class="q-mb-md q-mt-md">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6 q-py-sm">Propietario Seleccionado</div>
-          <div class="q-gutter-md">
-            <q-item-label>{{ propietarioSeleccionado.nombres }} {{ propietarioSeleccionado.apellidos
-              }}</q-item-label>
-            <q-item-label caption>CI: {{ propietarioSeleccionado.ci }}</q-item-label>
-            <q-item-label caption>Teléfono: {{ propietarioSeleccionado.telefono }}</q-item-label>
+    <!-- Buscador de Propietario Mejorado -->
+    <q-card class="q-mb-md search-card">
+      <q-card-section>
+        <div class="row items-center">
+          <div class="col-grow">
+            <q-input
+              filled
+              v-model="search"
+              label="Buscar propietario"
+              class="no-border"
+              placeholder="Ingrese nombre, apellido o CI del propietario"
+              bg-color="white"
+              standout
+              dense
+            >
+              <template v-slot:append>
+                <q-icon name="search" class="cursor-pointer" @click="buscarPropietarios" />
+              </template>
+            </q-input>
           </div>
-          <q-btn color="primary" @click="mostrarMascotas" label="Ver Mascotas" class="q-mt-md" />
-        </q-card-section>
+          <div class="col-auto q-ml-sm">
+            <q-btn
+              color="primary"
+              icon="search"
+              label="Buscar"
+              @click="buscarPropietarios"
+              unelevated
+              rounded
+            />
+          </div>
+        </div>
+      </q-card-section>
+    </q-card>
+
+    <!-- Resultados de Búsqueda Mejorados -->
+    <div v-if="propietarios.length > 0" class="q-mt-md">
+      <div class="text-subtitle1 text-weight-medium q-mb-sm">Resultados de búsqueda</div>
+      <q-card class="search-results">
+        <q-list separator>
+          <q-item
+            v-for="propietario in propietarios"
+            :key="propietario.id"
+            clickable
+            v-ripple
+            @click="seleccionarPropietario(propietario)"
+            class="propietario-item"
+          >
+            <q-item-section avatar>
+              <q-avatar color="primary" text-color="white">
+                {{ propietario.nombres.charAt(0) }}{{ propietario.apellidos.charAt(0) }}
+              </q-avatar>
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label class="text-weight-medium">{{ propietario.nombres }} {{ propietario.apellidos }}</q-item-label>
+              <q-item-label caption class="row items-center">
+                <q-icon name="badge" size="xs" class="q-mr-xs" /> CI: {{ propietario.ci }}
+                <q-separator vertical spaced class="q-mx-sm" />
+                <q-icon name="phone" size="xs" class="q-mr-xs" /> {{ propietario.telefono }}
+              </q-item-label>
+            </q-item-section>
+
+            <q-item-section side>
+              <q-icon name="chevron_right" color="grey-7" />
+            </q-item-section>
+          </q-item>
+        </q-list>
       </q-card>
     </div>
 
-    <!-- Lista de Mascotas del Propietario Seleccionado -->
-    <div v-if="mascotas.length > 0" class="q-mt-md">
-      <div v-for="mascota in mascotas" :key="mascota.id" class="q-mb-md">
-        <q-card>
-          <q-card-section class="row q-col-gutter-md">
-            <div class="foto-mascota col-4">
-              <q-img :src="`${$storage.defaults.baseURL}/${mascota.fotoFrontal}` || 'https://via.placeholder.com/150'"
-                alt="Foto del perro" class="mascota-imagen"
-                style="max-width: 100px; max-height: 100px; margin: 0 auto;" />
+    <!-- Perfil del Propietario Seleccionado Mejorado -->
+    <div v-if="propietarioSeleccionado" class="q-my-md">
+      <div class="text-subtitle1 text-weight-medium q-mb-sm">Información del Propietario</div>
+      <q-card class="profile-card">
+        <q-card-section class="bg-primary text-white">
+          <div class="row items-center">
+            <div class="col-auto q-mr-md">
+              <q-avatar size="72px" color="white" text-color="primary" font-size="40px">
+                {{ propietarioSeleccionado.nombres.charAt(0) }}{{ propietarioSeleccionado.apellidos.charAt(0) }}
+              </q-avatar>
             </div>
+            <div class="col">
+              <div class="text-h6">{{ propietarioSeleccionado.nombres }} {{ propietarioSeleccionado.apellidos }}</div>
+              <div class="q-mt-sm row items-center">
+                <q-chip dense outline class="q-mr-sm">
+                  <q-icon name="badge" left size="sm" />
+                  <span>CI: {{ propietarioSeleccionado.ci }}</span>
+                </q-chip>
+                <q-chip dense outline>
+                  <q-icon name="phone" left size="sm" />
+                  <span>{{ propietarioSeleccionado.telefono }}</span>
+                </q-chip>
+              </div>
+            </div>
+          </div>
+        </q-card-section>
 
-            <div class="col-8">
-              <div class="q-mb-md">
-                <q-input filled v-model="mascota.nombre" label="Nombre del Perro" disable />
+        <q-card-actions align="right">
+          <q-btn
+            color="primary"
+            icon="pets"
+            label="Ver Mascotas"
+            @click="mostrarMascotas"
+            unelevated
+            rounded
+          />
+        </q-card-actions>
+      </q-card>
+    </div>
+
+    <!-- Lista de Mascotas Mejorada -->
+    <div v-if="mascotas.length > 0" class="q-mt-md">
+      <div class="text-subtitle1 text-weight-medium q-mb-sm">Mascotas Registradas</div>
+      <div class="row q-col-gutter-md">
+        <div
+          v-for="mascota in mascotas"
+          :key="mascota.id"
+          class="col-xs-12 col-sm-6 col-md-4"
+        >
+          <q-card class="mascota-card">
+            <q-img
+              :src="`${$storage.defaults.baseURL}/${mascota.fotoFrontal}` || 'https://via.placeholder.com/150'"
+              height="200px"
+              fit="cover"
+              class="mascota-imagen"
+              placeholder-src="https://via.placeholder.com/150?text=Cargando..."
+            >
+              <template v-slot:error>
+                <div class="absolute-full flex flex-center bg-negative text-white">
+                  <q-icon name="error" size="24px" />
+                </div>
+              </template>
+              <div class="absolute-bottom text-subtitle1 text-center bg-dark q-pa-sm opacity-80">
+                {{ mascota.nombre }}
               </div>
-              <div class="q-mb-md">
-                <q-input filled v-model="mascota.especie" label="Especie" disable />
+            </q-img>
+
+            <q-card-section>
+              <div class="row q-col-gutter-sm">
+                <div class="col-6">
+                  <q-item dense>
+                    <q-item-section avatar>
+                      <q-icon color="primary" name="pets" />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label caption>Especie</q-item-label>
+                      <q-item-label>{{ mascota.especie }}</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </div>
+                <div class="col-6">
+                  <q-item dense>
+                    <q-item-section avatar>
+                      <q-icon color="primary" name="category" />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label caption>Raza</q-item-label>
+                      <q-item-label>{{ mascota.raza }}</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </div>
+                <div class="col-12">
+                  <q-item dense>
+                    <q-item-section avatar>
+                      <q-icon color="primary" name="straighten" />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label caption>Tamaño</q-item-label>
+                      <q-item-label>{{ mascota.tamanio }}</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </div>
               </div>
-              <div class="q-mb-md">
-                <q-input filled v-model="mascota.raza" label="Raza" disable />
-              </div>
-              <div class="q-mb-md">
-                <q-input filled v-model="mascota.tamanio" label="Tamaño" disable />
-              </div>
-              <!-- Botón para descargar PDF -->
-              <div class="q-mt-md">
-                <q-btn color="primary" label="Descargar PDF" @click="descargarPDF(mascota)" class="full-width" />
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
+            </q-card-section>
+
+            <q-card-actions align="center" class="q-pb-md">
+              <q-btn
+                color="primary"
+                icon="picture_as_pdf"
+                label="Descargar Carnet"
+                @click="descargarPDF(mascota)"
+                unelevated
+                rounded
+                class="full-width"
+              />
+            </q-card-actions>
+          </q-card>
+        </div>
       </div>
+    </div>
+
+    <!-- Mensaje si no hay resultados -->
+    <div v-if="propietarios.length === 0 && search.length > 0" class="text-center q-pa-lg">
+      <q-icon name="search_off" size="56px" color="grey-7" />
+      <div class="text-h6 q-mt-sm text-grey-7">No se encontraron resultados</div>
+      <div class="text-body2 text-grey-7">Intente con otro término de búsqueda</div>
+    </div>
+
+    <!-- Mensaje si no hay mascotas -->
+    <div v-if="propietarioSeleccionado && mascotas.length === 0 && mostrandoMascotas" class="text-center q-pa-lg">
+      <q-icon name="pets" size="56px" color="grey-7" />
+      <div class="text-h6 q-mt-sm text-grey-7">No hay mascotas registradas</div>
+      <div class="text-body2 text-grey-7">Este propietario no tiene mascotas asociadas</div>
     </div>
   </q-page>
 </template>
 
 <script>
 import { ref } from 'vue';
-import { QPage, QInput, QBtn, QCard, QCardSection, QList, QItem, QItemSection, QItemLabel, QImg } from 'quasar';
-import axios from 'axios';
+import { QPage, QInput, QBtn, QCard, QCardSection, QList, QItem, QItemSection, QItemLabel, QImg, QIcon, QAvatar, QCardActions, QChip, QSeparator } from 'quasar';
 import jsPDF from 'jspdf';
 import autoTable from "jspdf-autotable";
 import { api } from 'src/boot/axios'; // Ruta al archivo axios.js
 import { parseISO } from 'date-fns';
+
 export default {
   components: {
-    QPage, QInput, QBtn, QCard, QCardSection, QList, QItem, QItemSection, QItemLabel, QImg
+    QPage, QInput, QBtn, QCard, QCardSection, QList, QItem, QItemSection, QItemLabel, QImg, QIcon, QAvatar, QCardActions, QChip, QSeparator
   },
   setup() {
     const search = ref("");
     const propietarios = ref([]);
     const propietarioSeleccionado = ref(null);
     const mascotas = ref([]);
-
+    const mostrandoMascotas = ref(false);
 
     const buscarPropietarios = async () => {
+      if (!search.value.trim()) {
+        propietarios.value = [];
+        return;
+      }
+
       try {
         const response = await api.get('/buscar-personas', {
           params: { q: search.value }
@@ -98,6 +242,7 @@ export default {
         propietarios.value = response.data;
         propietarioSeleccionado.value = null;
         mascotas.value = [];
+        mostrandoMascotas.value = false;
       } catch (error) {
         propietarios.value = [];
       }
@@ -106,6 +251,7 @@ export default {
     const seleccionarPropietario = (propietario) => {
       propietarioSeleccionado.value = propietario;
       mascotas.value = [];
+      mostrandoMascotas.value = false;
     };
 
     const mascotaImage = async (fotoFrontal) => {
@@ -116,7 +262,6 @@ export default {
         return 'https://via.placeholder.com/150'; // Retorna un placeholder si ocurre un error
       }
     };
-
 
     const obtenerHistorialVacunas = async (mascotaId) => {
       try {
@@ -133,6 +278,7 @@ export default {
           // Usar la instancia `api` para obtener las mascotas
           const response = await api.get(`/propietario/${propietarioSeleccionado.value.id}/mascotas`);
           mascotas.value = response.data;
+          mostrandoMascotas.value = true;
 
           // Recorremos cada mascota para obtener su raza
           for (let mascota of mascotas.value) {
@@ -140,6 +286,7 @@ export default {
             mascota.raza = razaResponse.data.raza; // Asignamos la raza a cada mascota
           }
         } catch (error) {
+          mostrandoMascotas.value = true;
         }
       }
     };
@@ -245,7 +392,6 @@ export default {
       }
     };
 
-
     const obtenerRazaPorMascota = async (mascotaId) => {
       try {
         // Usa la instancia `api` para obtener la raza de la mascota
@@ -254,6 +400,7 @@ export default {
       } catch (error) {
       }
     };
+
     const obtenerImagen = async (ruta) => {
       try {
         const response = await api.get(`/storage/${ruta}`, { responseType: 'blob' });
@@ -263,12 +410,12 @@ export default {
       }
     };
 
-
     return {
       search,
       propietarios,
       propietarioSeleccionado,
       mascotas,
+      mostrandoMascotas,
       obtenerRazaPorMascota,
       buscarPropietarios,
       seleccionarPropietario,
@@ -282,39 +429,61 @@ export default {
 
 <style scoped>
 .q-page {
-  background-color: #f0f0f0;
+  background-color: #f7f7f7;
+  min-height: 100vh;
 }
 
-.q-img {
+.search-card, .profile-card, .mascota-card, .search-results {
   border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
-.q-btn {
-  width: 100%;
-  margin-bottom: 8px;
+.search-card:hover, .profile-card:hover, .mascota-card:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
-.foto-mascota {
+.mascota-card {
+  height: 100%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .mascota-imagen {
-  max-width: 150px;
-  border-radius: 10px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  transition: transform 0.5s;
+}
+
+.mascota-card:hover .mascota-imagen {
+  transform: scale(1.05);
+}
+
+.propietario-item {
+  transition: background-color 0.2s ease;
+}
+
+.propietario-item:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.no-border .q-field__native {
+  padding-left: 0;
 }
 
 .full-width {
   width: 100%;
 }
 
-.mascota-imagen {
-  max-width: 100px;
-  max-height: 200px;
-  border-radius: 10px;
-  margin: 0 auto;
-  /* Asegura que esté centrada */
-  display: block;
-  /* Para que tome el ancho completo en su contenedor */
+@media (max-width: 599px) {
+  .q-card-section {
+    padding: 12px;
+  }
+
+  .q-avatar {
+    font-size: 16px;
+  }
 }
 </style>

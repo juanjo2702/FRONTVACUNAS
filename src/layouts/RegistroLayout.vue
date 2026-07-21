@@ -2,7 +2,7 @@
   <q-layout view="hHh lpR fFf">
     <q-header elevated>
       <q-toolbar>
-        <q-toolbar-title>Página PreRegistro Publico</q-toolbar-title>
+        <q-toolbar-title>Página Publica</q-toolbar-title>
       </q-toolbar>
     </q-header>
 
